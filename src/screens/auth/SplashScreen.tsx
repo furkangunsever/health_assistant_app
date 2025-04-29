@@ -14,7 +14,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({navigation}) => {
     const timer = setTimeout(() => {
       navigation.reset({
         index: 0,
-        routes: [{name: 'Login'}],
+        routes: [{name: 'Welcome'}],
       });
     }, 2000);
 
@@ -23,7 +23,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
+      <StatusBar backgroundColor={COLORS.splash} barStyle="light-content" />
       <View style={styles.contentContainer}>
         <View style={styles.logoWrapper}>
           <Image
@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp(4),
-    
   },
   logo: {
     width: wp(40),

@@ -5,139 +5,171 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  ScrollView,
-  StatusBar,
+  Dimensions,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
-import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
-import CustomInput from '../../components/CustomInput';
-import CustomButton from '../../components/CustomButton';
-import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
+import {COLORS} from '../../utils/theme';
+import {useDispatch} from 'react-redux';
 import {login} from '../../redux/actions/authActions';
-import {clearError} from '../../redux/slices/authSlice';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 type LoginScreenProps = {
   navigation: StackNavigationProp<AuthStackParamList, 'Login'>;
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const dispatch = useDispatch();
-  const {isLoading, error} = useSelector((state: RootState) => state.auth);
-
-  const validateForm = () => {
-    let isValid = true;
-
-    // E-posta doğrulama
-    if (!email.trim()) {
-      setEmailError('E-posta alanı zorunludur');
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('E-posta adresi gereklidir');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
       setEmailError('Geçerli bir e-posta adresi giriniz');
-      isValid = false;
-    } else {
-      setEmailError('');
+      return false;
     }
+    setEmailError('');
+    return true;
+  };
 
-    // Şifre doğrulama
+  const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError('Şifre alanı zorunludur');
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError('Şifre en az 6 karakter olmalıdır');
-      isValid = false;
-    } else {
-      setPasswordError('');
+      setPasswordError('Şifre gereklidir');
+      return false;
     }
-
-    return isValid;
+    if (password.length < 6) {
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
+      return false;
+    }
+    setPasswordError('');
+    return true;
   };
 
   const handleLogin = () => {
-    if (validateForm()) {
-      // Not: Mock servis için test hesapları:
-      // Email: test@example.com, Password: 123456
-      // Email: user@example.com, Password: 123456
-      dispatch(login({email, password}) as any);
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (isEmailValid && isPasswordValid) {
+      try {
+        dispatch(login({email, password}) as any);
+      } catch (error) {
+        Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu');
+      }
     }
-  };
-
-  const navigateToRegister = () => {
-    dispatch(clearError());
-    navigation.navigate('Register');
-  };
-
-  const navigateToForgotPassword = () => {
-    dispatch(clearError());
-    navigation.navigate('ForgotPassword');
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
-      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Sağlık Asistanım</Text>
-        </View>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.title}>Giriş Yap</Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Hoşgeldiniz! Sizi</Text>
+        <Text style={styles.subtitle}>gördüğüme sevindim</Text>
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        <View style={styles.inputContainer}>
+          <View>
+            <TextInput
+              style={[styles.input, emailError ? styles.inputError : null]}
+              placeholder="E-postanızı girin"
+              value={email}
+              onChangeText={text => {
+                setEmail(text);
+                validateEmail(text);
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#999"
+            />
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
+          </View>
 
-        <View style={styles.formContainer}>
-          <CustomInput
-            label="E-posta"
-            placeholder="E-posta adresinizi giriniz"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={emailError}
-          />
-
-          <CustomInput
-            label="Şifre"
-            placeholder="Şifrenizi giriniz"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            error={passwordError}
-          />
-
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={navigateToForgotPassword}>
-            <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
-          </TouchableOpacity>
-
-          <CustomButton
-            title="Giriş Yap"
-            onPress={handleLogin}
-            isLoading={isLoading}
-            containerStyle={styles.loginButton}
-          />
-
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Hesabınız yok mu?</Text>
-            <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={styles.registerLink}> Kayıt Ol</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[styles.input, passwordError ? styles.inputError : null]}
+              placeholder="Şifrenizi girin"
+              value={password}
+              onChangeText={text => {
+                setPassword(text);
+                validatePassword(text);
+              }}
+              secureTextEntry={!showPassword}
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}>
+              <Text>
+                {showPassword ? (
+                  <Image
+                    source={require('../../assets/view_1.png')}
+                    style={styles.eyeIcon}
+                  />
+                ) : (
+                  <Image
+                    source={require('../../assets/view_2.png')}
+                    style={styles.eyeIcon}
+                  />
+                )}
+              </Text>
             </TouchableOpacity>
+            {passwordError ? (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            ) : null}
           </View>
         </View>
-      </ScrollView>
+
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Giriş Yap</Text>
+        </TouchableOpacity>
+
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Ya da</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity style={styles.googleButton}>
+          <Image
+            source={require('../../assets/google.png')}
+            style={styles.googleIcon}
+          />
+        </TouchableOpacity>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Hesabınız yok mu? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.registerLink}>Şimdi kayıt ol</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -145,68 +177,142 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.white,
   },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  logoContainer: {
+  backButton: {
+    position: 'absolute',
+    top: windowHeight * 0.05,
+    left: windowWidth * 0.05,
+    width: 40,
+    height: 40,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: hp(6),
-    marginBottom: hp(2),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  logoText: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
+  backButtonText: {
+    fontSize: 24,
+    color: COLORS.text,
   },
-  logo: {
-    width: wp(40),
-    height: hp(15),
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: windowWidth * 0.05,
+    paddingTop: windowHeight * 0.12,
   },
   title: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.lg,
-    textAlign: 'center',
+    fontSize: windowHeight * 0.04,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: windowHeight * 0.01,
   },
-  formContainer: {
-    width: '100%',
-    marginTop: SPACING.md,
+  subtitle: {
+    fontSize: windowHeight * 0.04,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: windowHeight * 0.04,
+  },
+  inputContainer: {
+    marginTop: windowHeight * 0.02,
+    gap: windowHeight * 0.02,
+  },
+  input: {
+    height: windowHeight * 0.07,
+    backgroundColor: '#F6F6F6',
+    borderRadius: 12,
+    paddingHorizontal: windowWidth * 0.05,
+    fontSize: windowHeight * 0.018,
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: COLORS.error,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: windowHeight * 0.015,
+    marginTop: windowHeight * 0.01,
+    marginLeft: windowWidth * 0.02,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: windowWidth * 0.05,
+    top: windowHeight * 0.02,
+    width: windowHeight * 0.03,
+    height: windowHeight * 0.03,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: SPACING.lg,
+    marginTop: windowHeight * 0.02,
+    marginBottom: windowHeight * 0.03,
   },
   forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZE.sm,
+    color: COLORS.text,
+    fontSize: windowHeight * 0.018,
   },
   loginButton: {
-    marginTop: SPACING.lg,
+    backgroundColor: COLORS.primary,
+    height: windowHeight * 0.07,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: windowHeight * 0.03,
+  },
+  loginButtonText: {
+    color: COLORS.white,
+    fontSize: windowHeight * 0.02,
+    fontWeight: '600',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: windowHeight * 0.03,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  dividerText: {
+    marginHorizontal: windowWidth * 0.03,
+    color: '#666',
+    fontSize: windowHeight * 0.018,
+  },
+  googleButton: {
+    height: windowHeight * 0.07,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  googleIcon: {
+    width: windowHeight * 0.03,
+    height: windowHeight * 0.03,
   },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: SPACING.xl,
+    marginTop: windowHeight * 0.03,
   },
   registerText: {
-    fontSize: FONT_SIZE.sm,
     color: COLORS.text,
+    fontSize: windowHeight * 0.018,
   },
   registerLink: {
-    fontSize: FONT_SIZE.sm,
     color: COLORS.primary,
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: COLORS.error,
-    textAlign: 'center',
-    marginBottom: SPACING.md,
-    fontSize: FONT_SIZE.sm,
+    fontSize: windowHeight * 0.018,
+    fontWeight: '600',
   },
 });
 

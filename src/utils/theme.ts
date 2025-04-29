@@ -23,7 +23,7 @@ export const FONT_SIZE = {
 
 // Renk şeması
 export const COLORS = {
-  primary: '#4FACFE',
+  primary: '#1194C1',
   secondary: '#3F51B5',
   splash: '#ADDAE7',
   background: '#FFFFFF',

@@ -4,26 +4,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  ScrollView,
-  StatusBar,
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Dimensions,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
-import {
-  COLORS,
-  FONT_SIZE,
-  SPACING,
-  hp,
-  wp,
-  BORDER_RADIUS,
-  SHADOW,
-} from '../../utils/theme';
-import CustomButton from '../../components/CustomButton';
+import {COLORS} from '../../utils/theme';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 type VerifyCodeScreenProps = {
   navigation: StackNavigationProp<AuthStackParamList, 'VerifyCode'>;
@@ -35,14 +27,12 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({
   route,
 }) => {
   const {email} = route.params;
-  const [code, setCode] = useState<string[]>(['', '', '', '', '', '']);
+  const [code, setCode] = useState<string[]>(['', '', '', '']);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(60);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
-  // Timer işlemi
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
@@ -74,61 +64,40 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({
   const handleVerify = () => {
     const fullCode = code.join('');
 
-    if (fullCode.length !== 6) {
-      setError('Lütfen 6 haneli doğrulama kodunu giriniz');
+    if (fullCode.length !== 4) {
+      setError('Lütfen 4 haneli doğrulama kodunu giriniz');
       return;
     }
 
-    setIsLoading(true);
-
-    // Burada normalde API çağrısı yapılıp doğrulama yapılır
-    // Şimdilik sadece simüle ediyoruz
-    setTimeout(() => {
-      setIsLoading(false);
-      navigation.navigate('ResetPassword', {email, code: fullCode});
-    }, 1500);
+    navigation.navigate('ResetPassword', {email, code: fullCode});
   };
 
   const handleResendCode = () => {
     setTimer(60);
-    // Burada normalde yeniden kod gönderme API'si çağrılır
-  };
-
-  const navigateBack = () => {
-    navigation.goBack();
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
-      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={navigateBack}>
-            <Text style={styles.backButtonText}>Geri</Text>
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Sağlık Asistanım</Text>
-          </View>
-        </View>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.title}>Doğrulama Kodu</Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Doğrulama</Text>
         <Text style={styles.subtitle}>
-          {email} adresine gönderilen 6 haneli doğrulama kodunu giriniz.
+          E-posta adresinize az önce gönderdiğimiz doğrulama kodunu girin.
         </Text>
-
-        {error !== '' && <Text style={styles.errorText}>{error}</Text>}
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
             <TextInput
               key={index}
               ref={ref => (inputRefs.current[index] = ref)}
-              style={styles.codeInput}
+              style={[styles.codeInput, error ? styles.inputError : null]}
               value={digit}
               onChangeText={text => handleCodeChange(text, index)}
               onKeyPress={e => handleKeyPress(e, index)}
@@ -140,26 +109,19 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({
           ))}
         </View>
 
-        <CustomButton
-          title="Doğrula"
-          onPress={handleVerify}
-          isLoading={isLoading}
-          containerStyle={styles.verifyButton}
-        />
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
+          <Text style={styles.verifyButtonText}>Doğrula</Text>
+        </TouchableOpacity>
 
         <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Kod almadınız mı?</Text>
-          {timer > 0 ? (
-            <Text style={styles.timerText}>
-              {timer} saniye sonra tekrar gönder
-            </Text>
-          ) : (
-            <TouchableOpacity onPress={handleResendCode}>
-              <Text style={styles.resendLink}>Yeniden Gönder</Text>
-            </TouchableOpacity>
-          )}
+          <Text style={styles.resendText}>Kod almadınız mı? </Text>
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendLink}>Yeniden gönder</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -167,97 +129,102 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp(4),
-    marginBottom: hp(1),
+    backgroundColor: COLORS.white,
   },
   backButton: {
     position: 'absolute',
-    left: 0,
-    zIndex: 1,
+    top: windowHeight * 0.05,
+    left: windowWidth * 0.05,
+    width: 40,
+    height: 40,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZE.md,
+    fontSize: 24,
+    color: COLORS.text,
   },
-  logoContainer: {
+  contentContainer: {
     flex: 1,
-    alignItems: 'center',
-  },
-  logoText: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  logo: {
-    width: wp(30),
-    height: hp(10),
+    paddingHorizontal: windowWidth * 0.05,
+    paddingTop: windowHeight * 0.12,
   },
   title: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.sm,
-    textAlign: 'center',
+    fontSize: windowHeight * 0.04,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: windowHeight * 0.02,
   },
   subtitle: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
+    fontSize: windowHeight * 0.02,
+    color: '#666',
+    marginBottom: windowHeight * 0.04,
+    lineHeight: windowHeight * 0.03,
   },
   codeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: SPACING.xl,
+    justifyContent: 'center',
+    gap: windowWidth * 0.05,
+    marginTop: windowHeight * 0.02,
   },
   codeInput: {
-    width: wp(12),
-    height: wp(15),
-    borderWidth: 1,
-    borderColor: COLORS.gray,
-    borderRadius: BORDER_RADIUS.sm,
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    ...SHADOW.small,
-    backgroundColor: COLORS.white,
-  },
-  verifyButton: {
-    marginTop: SPACING.lg,
-  },
-  resendContainer: {
-    alignItems: 'center',
-    marginTop: SPACING.xl,
-  },
-  resendText: {
-    fontSize: FONT_SIZE.sm,
+    width: windowWidth * 0.13,
+    height: windowWidth * 0.13,
+    backgroundColor: '#F6F6F6',
+    borderRadius: 12,
+    fontSize: windowHeight * 0.025,
+    fontWeight: '600',
     color: COLORS.text,
-    marginBottom: SPACING.xs,
   },
-  timerText: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.gray,
-  },
-  resendLink: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.primary,
-    fontWeight: 'bold',
+  inputError: {
+    borderWidth: 1,
+    borderColor: COLORS.error,
   },
   errorText: {
     color: COLORS.error,
-    textAlign: 'center',
-    marginBottom: SPACING.md,
-    fontSize: FONT_SIZE.sm,
+    fontSize: windowHeight * 0.015,
+    marginTop: windowHeight * 0.01,
+    marginLeft: windowWidth * 0.02,
+  },
+  verifyButton: {
+    backgroundColor: COLORS.primary,
+    height: windowHeight * 0.07,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: windowHeight * 0.03,
+  },
+  verifyButtonText: {
+    color: COLORS.white,
+    fontSize: windowHeight * 0.02,
+    fontWeight: '600',
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: windowHeight * 0.05,
+    left: 0,
+    right: 0,
+  },
+  resendText: {
+    color: COLORS.text,
+    fontSize: windowHeight * 0.018,
+  },
+  resendLink: {
+    color: COLORS.primary,
+    fontSize: windowHeight * 0.018,
+    fontWeight: '600',
   },
 });
 

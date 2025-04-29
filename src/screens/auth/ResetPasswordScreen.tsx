@@ -4,18 +4,19 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  ScrollView,
-  StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
-import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
+import {COLORS} from '../../utils/theme';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 type ResetPasswordScreenProps = {
   navigation: StackNavigationProp<AuthStackParamList, 'ResetPassword'>;
@@ -32,11 +33,12 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateForm = () => {
     let isValid = true;
 
-    // Şifre doğrulama
     if (!password) {
       setPasswordError('Şifre alanı zorunludur');
       isValid = false;
@@ -47,7 +49,6 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
       setPasswordError('');
     }
 
-    // Şifre onay doğrulama
     if (!confirmPassword) {
       setConfirmPasswordError('Şifre onayı zorunludur');
       isValid = false;
@@ -64,9 +65,6 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   const handleResetPassword = () => {
     if (validateForm()) {
       setIsLoading(true);
-
-      // Burada normalde API çağrısı yapılıp şifre sıfırlama işlemi yapılır
-      // Şimdilik sadece simüle ediyoruz
       setTimeout(() => {
         setIsLoading(false);
         navigation.navigate('PasswordChanged');
@@ -74,28 +72,17 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
     }
   };
 
-  const navigateBack = () => {
-    navigation.goBack();
-  };
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
-      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={navigateBack}>
-            <Text style={styles.backButtonText}>Geri</Text>
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Sağlık Asistanım</Text>
-          </View>
-        </View>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
 
+      <View style={styles.contentContainer}>
         <Text style={styles.title}>Yeni Şifre Oluştur</Text>
         <Text style={styles.subtitle}>
           Lütfen yeni şifrenizi girin ve onaylayın.
@@ -107,8 +94,11 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
             placeholder="Yeni şifrenizi giriniz"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             error={passwordError}
+            showPasswordToggle
+            onTogglePassword={() => setShowPassword(!showPassword)}
+            containerStyle={styles.inputContainer}
           />
 
           <CustomInput
@@ -116,8 +106,13 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
             placeholder="Şifrenizi tekrar giriniz"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            secureTextEntry
+            secureTextEntry={!showConfirmPassword}
             error={confirmPasswordError}
+            showPasswordToggle
+            onTogglePassword={() =>
+              setShowConfirmPassword(!showConfirmPassword)
+            }
+            containerStyle={styles.inputContainer}
           />
 
           <CustomButton
@@ -127,7 +122,7 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
             containerStyle={styles.resetButton}
           />
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -135,61 +130,59 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp(4),
-    marginBottom: hp(1),
+    backgroundColor: COLORS.white,
   },
   backButton: {
     position: 'absolute',
-    left: 0,
-    zIndex: 1,
+    top: windowHeight * 0.05,
+    left: windowWidth * 0.05,
+    width: 40,
+    height: 40,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZE.md,
+    fontSize: 24,
+    color: COLORS.text,
   },
-  logoContainer: {
+  contentContainer: {
     flex: 1,
-    alignItems: 'center',
-  },
-  logoText: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  logo: {
-    width: wp(30),
-    height: hp(10),
+    paddingHorizontal: windowWidth * 0.05,
+    paddingTop: windowHeight * 0.12,
   },
   title: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.sm,
-    textAlign: 'center',
+    fontSize: windowHeight * 0.04,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: windowHeight * 0.02,
   },
   subtitle: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
+    fontSize: windowHeight * 0.02,
+    color: '#666',
+    marginBottom: windowHeight * 0.04,
+    lineHeight: windowHeight * 0.03,
   },
   formContainer: {
     width: '100%',
-    marginTop: SPACING.md,
+    marginTop: windowHeight * 0.02,
+  },
+  inputContainer: {
+    marginBottom: windowHeight * 0.02,
   },
   resetButton: {
-    marginTop: SPACING.xl,
+    height: windowHeight * 0.07,
+    marginTop: windowHeight * 0.03,
+    borderRadius: 12,
   },
 });
 

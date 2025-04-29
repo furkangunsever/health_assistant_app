@@ -4,20 +4,20 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  ScrollView,
-  StatusBar,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  Alert,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
-import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
-import CustomInput from '../../components/CustomInput';
-import CustomButton from '../../components/CustomButton';
-import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '../../redux/store';
+import {COLORS} from '../../utils/theme';
+import {useDispatch} from 'react-redux';
 import {forgotPassword} from '../../redux/actions/authActions';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 type ForgotPasswordScreenProps = {
   navigation: StackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
@@ -28,90 +28,81 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-
   const dispatch = useDispatch();
-  const {isLoading, error} = useSelector((state: RootState) => state.auth);
 
-  const validateForm = () => {
-    let isValid = true;
-
-    // E-posta doğrulama
-    if (!email.trim()) {
-      setEmailError('E-posta alanı zorunludur');
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Geçerli bir e-posta adresi giriniz');
-      isValid = false;
-    } else {
-      setEmailError('');
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('E-posta adresi gereklidir');
+      return false;
     }
-
-    return isValid;
+    if (!emailRegex.test(email)) {
+      setEmailError('Geçerli bir e-posta adresi giriniz');
+      return false;
+    }
+    setEmailError('');
+    return true;
   };
 
   const handleSendCode = () => {
-    if (validateForm()) {
-      // Not: mock service için test@example.com veya user@example.com kullanabilirsiniz
-      dispatch(forgotPassword(email) as any);
-      navigation.navigate('VerifyCode', {email});
+    if (validateEmail(email)) {
+      try {
+        dispatch(forgotPassword(email) as any);
+        navigation.navigate('VerifyCode', {email});
+      } catch (error) {
+        Alert.alert('Hata', 'Kod gönderilirken bir hata oluştu');
+      }
     }
-  };
-
-  const navigateToLogin = () => {
-    navigation.navigate('Login');
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
-      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={navigateToLogin}>
-            <Text style={styles.backButtonText}>Geri</Text>
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Sağlık Asistanım</Text>
-          </View>
-        </View>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>{'<'}</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.title}>Şifremi Unuttum</Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Parolanızı mı unuttunuz?</Text>
         <Text style={styles.subtitle}>
-          Şifrenizi sıfırlamak için e-posta adresinizi giriniz. Size doğrulama
-          kodu göndereceğiz.
+          Merak etme! Bu meydana gelir. Lütfen hesabınıza bağlı e-posta adresini
+          girin.
         </Text>
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
-
-        <View style={styles.formContainer}>
-          <CustomInput
-            label="E-posta"
-            placeholder="E-posta adresinizi giriniz"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={emailError}
-          />
-
-          <CustomButton
-            title="Kod Gönder"
-            onPress={handleSendCode}
-            isLoading={isLoading}
-            containerStyle={styles.sendButton}
-          />
-
-          <View style={styles.loginContainer}>
-            <TouchableOpacity onPress={navigateToLogin}>
-              <Text style={styles.loginLink}>Giriş Ekranına Dön</Text>
-            </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <View>
+            <TextInput
+              style={[styles.input, emailError ? styles.inputError : null]}
+              placeholder="E-postanızı girin"
+              value={email}
+              onChangeText={text => {
+                setEmail(text);
+                validateEmail(text);
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#999"
+            />
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
           </View>
         </View>
-      </ScrollView>
+
+        <TouchableOpacity style={styles.sendButton} onPress={handleSendCode}>
+          <Text style={styles.sendButtonText}>Kodu Gönder</Text>
+        </TouchableOpacity>
+
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Şifrenizi Hatırlıyor musunuz? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Giriş yapmak</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -119,76 +110,97 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: hp(4),
-    marginBottom: hp(1),
+    backgroundColor: COLORS.white,
   },
   backButton: {
     position: 'absolute',
-    left: 0,
-    zIndex: 1,
+    top: windowHeight * 0.05,
+    left: windowWidth * 0.05,
+    width: 40,
+    height: 40,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZE.md,
+    fontSize: 24,
+    color: COLORS.text,
   },
-  logoContainer: {
+  contentContainer: {
     flex: 1,
-    alignItems: 'center',
-  },
-  logoText: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  logo: {
-    width: wp(30),
-    height: hp(10),
+    paddingHorizontal: windowWidth * 0.05,
+    paddingTop: windowHeight * 0.12,
   },
   title: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.sm,
-    textAlign: 'center',
+    fontSize: windowHeight * 0.04,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: windowHeight * 0.02,
   },
   subtitle: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
+    fontSize: windowHeight * 0.02,
+    color: '#666',
+    marginBottom: windowHeight * 0.04,
+    lineHeight: windowHeight * 0.03,
   },
-  formContainer: {
-    width: '100%',
-    marginTop: SPACING.md,
+  inputContainer: {
+    marginTop: windowHeight * 0.02,
   },
-  sendButton: {
-    marginTop: SPACING.lg,
+  input: {
+    height: windowHeight * 0.07,
+    backgroundColor: '#F6F6F6',
+    borderRadius: 12,
+    paddingHorizontal: windowWidth * 0.05,
+    fontSize: windowHeight * 0.018,
   },
-  loginContainer: {
-    alignItems: 'center',
-    marginTop: SPACING.xl,
-  },
-  loginLink: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.primary,
-    fontWeight: 'bold',
+  inputError: {
+    borderWidth: 1,
+    borderColor: COLORS.error,
   },
   errorText: {
     color: COLORS.error,
-    textAlign: 'center',
-    marginBottom: SPACING.md,
-    fontSize: FONT_SIZE.sm,
+    fontSize: windowHeight * 0.015,
+    marginTop: windowHeight * 0.01,
+    marginLeft: windowWidth * 0.02,
+  },
+  sendButton: {
+    backgroundColor: COLORS.primary,
+    height: windowHeight * 0.07,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: windowHeight * 0.03,
+  },
+  sendButtonText: {
+    color: COLORS.white,
+    fontSize: windowHeight * 0.02,
+    fontWeight: '600',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: windowHeight * 0.05,
+    left: 0,
+    right: 0,
+  },
+  loginText: {
+    color: COLORS.text,
+    fontSize: windowHeight * 0.018,
+  },
+  loginLink: {
+    color: COLORS.primary,
+    fontSize: windowHeight * 0.018,
+    fontWeight: '600',
   },
 });
 

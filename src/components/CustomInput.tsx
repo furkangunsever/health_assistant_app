@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   TextInput,
   View,
@@ -6,53 +6,53 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInputProps,
+  ViewStyle,
 } from 'react-native';
-import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, wp } from '../utils/theme';
+import {COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, wp} from '../utils/theme';
 
 interface CustomInputProps extends TextInputProps {
   label?: string;
   error?: string;
   secureTextEntry?: boolean;
+  showPasswordToggle?: boolean;
+  onTogglePassword?: () => void;
+  containerStyle?: ViewStyle;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
   label,
   error,
   secureTextEntry,
+  showPasswordToggle,
+  onTogglePassword,
+  containerStyle,
   ...props
 }) => {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setIsPasswordVisible(!isPasswordVisible);
-  };
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
           isFocused && styles.focusedInput,
           error && styles.errorInput,
-        ]}
-      >
+        ]}>
         <TextInput
           style={styles.input}
           placeholderTextColor={COLORS.gray}
-          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          secureTextEntry={secureTextEntry}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
         />
-        {secureTextEntry && (
+        {showPasswordToggle && (
           <TouchableOpacity
             style={styles.visibilityBtn}
-            onPress={togglePasswordVisibility}
-          >
+            onPress={onTogglePassword}>
             <Text style={styles.visibilityText}>
-              {isPasswordVisible ? 'Gizle' : 'Göster'}
+              {secureTextEntry ? 'Göster' : 'Gizle'}
             </Text>
           </TouchableOpacity>
         )}
@@ -108,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomInput; 
+export default CustomInput;
