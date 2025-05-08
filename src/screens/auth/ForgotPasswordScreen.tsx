@@ -44,13 +44,27 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     return true;
   };
 
-  const handleSendCode = () => {
-    if (validateEmail(email)) {
+  const handleSendResetLink = () => {
+    const isEmailValid = validateEmail(email);
+
+    if (isEmailValid) {
       try {
         dispatch(forgotPassword(email) as any);
-        navigation.navigate('VerifyCode', {email});
+        Alert.alert(
+          'Başarılı',
+          'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+          [
+            {
+              text: 'Tamam',
+              onPress: () => navigation.navigate('VerifyCode', {email}),
+            },
+          ],
+        );
       } catch (error) {
-        Alert.alert('Hata', 'Kod gönderilirken bir hata oluştu');
+        Alert.alert(
+          'Hata',
+          'Şifre sıfırlama e-postası gönderilirken bir hata oluştu',
+        );
       }
     }
   };
@@ -92,7 +106,9 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           </View>
         </View>
 
-        <TouchableOpacity style={styles.sendButton} onPress={handleSendCode}>
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={handleSendResetLink}>
           <Text style={styles.sendButtonText}>Kodu Gönder</Text>
         </TouchableOpacity>
 

@@ -1,60 +1,70 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: any | null;
-  error: string | null;
-}
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {AuthState, SerializableUser} from '../../types/auth.types';
+import {User} from 'firebase/auth';
 
 const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   user: null,
   error: null,
+  emailVerified: false,
+  emailSent: false,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginStart: (state) => {
+    loginStart: state => {
       state.isLoading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<any>) => {
+    loginSuccess: (state, action: PayloadAction<SerializableUser>) => {
       state.isLoading = false;
-      state.isAuthenticated = true;
+      state.isAuthenticated = action.payload.emailVerified;
       state.user = action.payload;
+      state.emailVerified = action.payload.emailVerified;
       state.error = null;
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
-    registerStart: (state) => {
+    registerStart: state => {
       state.isLoading = true;
       state.error = null;
     },
-    registerSuccess: (state, action: PayloadAction<any>) => {
+    registerSuccess: (state, action: PayloadAction<SerializableUser>) => {
       state.isLoading = false;
-      state.isAuthenticated = true;
+      state.isAuthenticated = false;
       state.user = action.payload;
+      state.emailVerified = false;
       state.error = null;
     },
     registerFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
-    logout: (state) => {
+    emailVerificationSent: state => {
+      state.emailSent = true;
+    },
+    emailVerified: state => {
+      if (state.user) {
+        state.emailVerified = true;
+        state.isAuthenticated = true;
+      }
+    },
+    logout: state => {
       state.isAuthenticated = false;
       state.user = null;
+      state.emailVerified = false;
+      state.emailSent = false;
     },
-    resetPassword: (state) => {
+    resetPassword: state => {
       state.isLoading = true;
       state.error = null;
     },
-    resetPasswordSuccess: (state) => {
+    resetPasswordSuccess: state => {
       state.isLoading = false;
       state.error = null;
     },
@@ -62,7 +72,7 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },
@@ -75,6 +85,8 @@ export const {
   registerStart,
   registerSuccess,
   registerFailure,
+  emailVerificationSent,
+  emailVerified,
   logout,
   resetPassword,
   resetPasswordSuccess,
@@ -82,4 +94,4 @@ export const {
   clearError,
 } = authSlice.actions;
 
-export default authSlice.reducer; 
+export default authSlice.reducer;

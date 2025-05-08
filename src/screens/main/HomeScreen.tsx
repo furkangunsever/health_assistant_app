@@ -35,6 +35,12 @@ const HomeScreen = () => {
       <View style={styles.content}>
         <Text style={styles.welcomeText}>Hoş Geldiniz!</Text>
         <Text style={styles.emailText}>{user?.email}</Text>
+        {user?.displayName && (
+          <Text style={styles.displayNameText}>{user.displayName}</Text>
+        )}
+        {user?.photoURL && (
+          <Image source={{uri: user.photoURL}} style={styles.profileImage} />
+        )}
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Sağlık Asistanınız</Text>
@@ -102,6 +108,17 @@ const styles = StyleSheet.create({
   emailText: {
     fontSize: FONT_SIZE.md,
     color: COLORS.primary,
+    marginBottom: SPACING.xl,
+  },
+  displayNameText: {
+    fontSize: FONT_SIZE.md,
+    color: COLORS.primary,
+    marginBottom: SPACING.xl,
+  },
+  profileImage: {
+    width: wp(30),
+    height: hp(5),
+    borderRadius: hp(2.5),
     marginBottom: SPACING.xl,
   },
   infoCard: {

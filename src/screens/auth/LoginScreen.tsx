@@ -15,7 +15,13 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
 import {COLORS} from '../../utils/theme';
 import {useDispatch} from 'react-redux';
-import {login} from '../../redux/actions/authActions';
+import {
+  login,
+  loginWithGoogle,
+  verifyEmail,
+  logout,
+} from '../../redux/actions/authActions';
+import {SerializableUser} from '../../types/auth.types';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -65,10 +71,59 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
 
     if (isEmailValid && isPasswordValid) {
       try {
-        dispatch(login({email, password}) as any);
+        dispatch(login({email, password}) as any)
+          .unwrap()
+          .then((user: SerializableUser) => {
+            console.log('Giriş işlemi başarılı:', user);
+
+            if (!user.emailVerified) {
+              Alert.alert(
+                'E-posta Doğrulama Gerekli',
+                'Lütfen hesabınıza gönderilen e-posta doğrulama bağlantısını tıklayın. Doğrulama yapmadan giriş yapamazsınız.',
+                [
+                  {
+                    text: 'Yeniden Gönder',
+                    onPress: () => {
+                      dispatch(verifyEmail() as any)
+                        .then(() => {
+                          Alert.alert(
+                            'Doğrulama E-postası Gönderildi',
+                            'Lütfen e-posta kutunuzu kontrol edin ve doğrulama bağlantısını tıklayın.',
+                          );
+                        })
+                        .catch((error: any) => {
+                          Alert.alert(
+                            'Hata',
+                            `Doğrulama e-postası gönderilirken bir hata oluştu: ${error.message}`,
+                          );
+                        });
+                    },
+                  },
+                  {
+                    text: 'Tamam',
+                    style: 'cancel',
+                  },
+                ],
+              );
+            }
+          })
+          .catch((error: any) => {
+            Alert.alert(
+              'Giriş Hatası',
+              `Giriş yapılırken bir hata oluştu: ${error.message}`,
+            );
+          });
       } catch (error) {
         Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu');
       }
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    try {
+      dispatch(loginWithGoogle() as any);
+    } catch (error) {
+      Alert.alert('Hata', 'Google ile giriş yapılırken bir hata oluştu');
     }
   };
 
@@ -156,11 +211,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity style={styles.googleButton}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleLogin}>
           <Image
             source={require('../../assets/google.png')}
             style={styles.googleIcon}
           />
+          <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
         </TouchableOpacity>
 
         <View style={styles.registerContainer}>
@@ -299,6 +357,12 @@ const styles = StyleSheet.create({
   googleIcon: {
     width: windowHeight * 0.03,
     height: windowHeight * 0.03,
+  },
+  googleButtonText: {
+    color: COLORS.text,
+    fontSize: windowHeight * 0.018,
+    fontWeight: '600',
+    marginLeft: windowWidth * 0.02,
   },
   registerContainer: {
     flexDirection: 'row',

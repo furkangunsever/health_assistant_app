@@ -1,15 +1,23 @@
 export type AuthStackParamList = {
-  Splash: undefined;
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
-  VerifyCode: {email: string};
-  ResetPassword: {email: string; code: string};
+  VerifyCode: {
+    email: string;
+  };
+  ResetPassword: {
+    email: string;
+    code: string;
+  };
   PasswordChanged: undefined;
+  Splash: undefined;
 };
 
 export type MainStackParamList = {
   Home: undefined;
+  Profile: undefined;
+  HealthData: undefined;
+  Settings: undefined;
   // Diğer ana sayfalar buraya eklenecek
 };

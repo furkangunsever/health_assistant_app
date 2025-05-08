@@ -15,7 +15,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
 import {COLORS} from '../../utils/theme';
 import {useDispatch} from 'react-redux';
-import {register} from '../../redux/actions/authActions';
+import {register, loginWithGoogle} from '../../redux/actions/authActions';
+import {SerializableUser} from '../../types/auth.types';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -27,6 +28,7 @@ type RegisterScreenProps = {
 const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -34,10 +36,51 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
 
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [displayNameError, setDisplayNameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const dispatch = useDispatch();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('E-posta adresi gereklidir');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Geçerli bir e-posta adresi giriniz');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      setPasswordError('Şifre gereklidir');
+      return false;
+    }
+    if (password.length < 6) {
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const validateConfirmPassword = (confirmPwd: string) => {
+    if (!confirmPwd) {
+      setConfirmPasswordError('Şifre onayı gereklidir');
+      return false;
+    }
+    if (confirmPwd !== password) {
+      setConfirmPasswordError('Şifreler eşleşmiyor');
+      return false;
+    }
+    setConfirmPasswordError('');
+    return true;
+  };
 
   const validateForm = () => {
     let isValid = true;
@@ -82,13 +125,81 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
     return isValid;
   };
 
+  const validateDisplayName = (name: string) => {
+    if (!name) {
+      setDisplayNameError('Ad Soyad gereklidir');
+      return false;
+    }
+    if (name.length < 2) {
+      setDisplayNameError('Ad Soyad en az 2 karakter olmalıdır');
+      return false;
+    }
+    setDisplayNameError('');
+    return true;
+  };
+
   const handleRegister = () => {
-    if (validateForm()) {
+    const isEmailValid = validateEmail(email);
+    const isDisplayNameValid = validateDisplayName(displayName);
+    const isPasswordValid = validatePassword(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+
+    if (
+      isEmailValid &&
+      isPasswordValid &&
+      isConfirmPasswordValid &&
+      isDisplayNameValid
+    ) {
       try {
-        dispatch(register({email, password}) as any);
-      } catch (error) {
-        Alert.alert('Hata', 'Kayıt olurken bir hata oluştu');
+        console.log('Kayıt işlemi başlatılıyor:', {
+          email,
+          password,
+          displayName,
+        });
+        dispatch(register({email, password, displayName}) as any)
+          .unwrap()
+          .then((user: SerializableUser) => {
+            console.log('Kayıt başarılı:', user);
+            Alert.alert(
+              'Kayıt Başarılı',
+              'Hesabınız oluşturuldu! Lütfen e-posta adresinize gönderilen doğrulama bağlantısını tıklayarak hesabınızı doğrulayın.',
+              [
+                {
+                  text: 'Tamam',
+                  onPress: () => navigation.navigate('Login'),
+                },
+              ],
+            );
+          })
+          .catch((error: Error) => {
+            console.error('Kayıt hatası:', error);
+            Alert.alert(
+              'Hata',
+              `Kayıt yapılırken bir hata oluştu: ${error.message || error}`,
+            );
+          });
+      } catch (error: any) {
+        console.error('Dispatch hatası:', error);
+        Alert.alert(
+          'Hata',
+          `Kayıt yapılırken bir hata oluştu: ${error.message || error}`,
+        );
       }
+    } else {
+      console.log('Form doğrulama başarısız:', {
+        isEmailValid,
+        isPasswordValid,
+        isConfirmPasswordValid,
+        isDisplayNameValid,
+      });
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    try {
+      dispatch(loginWithGoogle() as any);
+    } catch (error) {
+      Alert.alert('Hata', 'Google ile giriş yapılırken bir hata oluştu');
     }
   };
 
@@ -108,28 +219,31 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
         <View style={styles.inputContainer}>
           <View>
             <TextInput
-              style={[styles.input, nameError ? styles.inputError : null]}
-              placeholder="Kullanıcı adı"
-              value={name}
+              style={[
+                styles.input,
+                displayNameError ? styles.inputError : null,
+              ]}
+              placeholder="Ad Soyad"
+              value={displayName}
               onChangeText={text => {
-                setName(text);
-                if (text.trim()) setNameError('');
+                setDisplayName(text);
+                validateDisplayName(text);
               }}
+              autoCapitalize="words"
               placeholderTextColor="#999"
             />
-            {nameError ? (
-              <Text style={styles.errorText}>{nameError}</Text>
+            {displayNameError ? (
+              <Text style={styles.errorText}>{displayNameError}</Text>
             ) : null}
           </View>
-
           <View>
             <TextInput
               style={[styles.input, emailError ? styles.inputError : null]}
-              placeholder="Email"
+              placeholder="E-postanızı girin"
               value={email}
               onChangeText={text => {
                 setEmail(text);
-                if (text.trim()) setEmailError('');
+                validateEmail(text);
               }}
               keyboardType="email-address"
               autoCapitalize="none"

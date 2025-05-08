@@ -8,11 +8,15 @@ import {
   Platform,
   TextInput,
   Dimensions,
+  Image,
+  Alert,
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
 import {AuthStackParamList} from '../../routes/NavigationTypes';
 import {COLORS} from '../../utils/theme';
+import {useDispatch} from 'react-redux';
+import {resetPasswordWithCode} from '../../redux/actions/authActions';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -26,103 +30,199 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({
   navigation,
   route,
 }) => {
+  const dispatch = useDispatch();
   const {email} = route.params;
-  const [code, setCode] = useState<string[]>(['', '', '', '']);
-  const [error, setError] = useState('');
-  const [timer, setTimer] = useState(60);
-
+  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [focusedInput, setFocusedInput] = useState(0);
   const inputRefs = useRef<Array<TextInput | null>>([]);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer(prevTimer => prevTimer - 1);
-      }, 1000);
-
-      return () => clearInterval(interval);
+  const validatePassword = (password: string) => {
+    if (!password) {
+      setPasswordError('Şifre gereklidir');
+      return false;
     }
-  }, [timer]);
+    if (password.length < 6) {
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
 
-  const handleCodeChange = (text: string, index: number) => {
-    if (/^[0-9]?$/.test(text)) {
+  const validateConfirmPassword = (confirmPwd: string) => {
+    if (confirmPwd !== newPassword) {
+      setConfirmPasswordError('Şifreler eşleşmiyor');
+      return false;
+    }
+    setConfirmPasswordError('');
+    return true;
+  };
+
+  const handleInputChange = (text: string, index: number) => {
+    if (text.length <= 1) {
       const newCode = [...code];
       newCode[index] = text;
       setCode(newCode);
 
-      if (text !== '' && index < 5) {
+      if (text.length === 1 && index < 5) {
         inputRefs.current[index + 1]?.focus();
       }
     }
   };
 
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && index > 0 && code[index] === '') {
-      inputRefs.current[index - 1]?.focus();
+  const handleResetPassword = () => {
+    const isPasswordValid = validatePassword(newPassword);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+
+    if (isPasswordValid && isConfirmPasswordValid) {
+      const verificationCode = code.join('');
+      if (verificationCode.length === 6) {
+        try {
+          dispatch(
+            resetPasswordWithCode({code: verificationCode, newPassword}) as any,
+          );
+          Alert.alert('Başarılı', 'Şifreniz başarıyla sıfırlandı.', [
+            {
+              text: 'Tamam',
+              onPress: () => navigation.navigate('PasswordChanged'),
+            },
+          ]);
+        } catch (error) {
+          Alert.alert('Hata', 'Şifre sıfırlanırken bir hata oluştu');
+        }
+      } else {
+        Alert.alert('Hata', 'Lütfen geçerli bir doğrulama kodu girin');
+      }
     }
-  };
-
-  const handleVerify = () => {
-    const fullCode = code.join('');
-
-    if (fullCode.length !== 4) {
-      setError('Lütfen 4 haneli doğrulama kodunu giriniz');
-      return;
-    }
-
-    navigation.navigate('ResetPassword', {email, code: fullCode});
-  };
-
-  const handleResendCode = () => {
-    setTimer(60);
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}>
         <Text style={styles.backButtonText}>{'<'}</Text>
       </TouchableOpacity>
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Doğrulama</Text>
-        <Text style={styles.subtitle}>
-          E-posta adresinize az önce gönderdiğimiz doğrulama kodunu girin.
-        </Text>
+      <Text style={styles.title}>Doğrulama Kodu</Text>
+      <Text style={styles.subtitle}>
+        E-posta adresinize gönderilen 6 haneli kodu giriniz
+      </Text>
 
-        <View style={styles.codeContainer}>
-          {code.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={ref => (inputRefs.current[index] = ref)}
-              style={[styles.codeInput, error ? styles.inputError : null]}
-              value={digit}
-              onChangeText={text => handleCodeChange(text, index)}
-              onKeyPress={e => handleKeyPress(e, index)}
-              keyboardType="numeric"
-              maxLength={1}
-              textAlign="center"
-              autoFocus={index === 0}
-            />
-          ))}
+      <View style={styles.inputContainer}>
+        {code.map((digit, index) => (
+          <TextInput
+            key={index}
+            style={[
+              styles.input,
+              focusedInput === index ? styles.inputFocused : null,
+            ]}
+            value={digit}
+            onChangeText={text => handleInputChange(text, index)}
+            keyboardType="number-pad"
+            maxLength={1}
+            ref={ref => (inputRefs.current[index] = ref)}
+            onFocus={() => setFocusedInput(index)}
+            onBlur={() => setFocusedInput(-1)}
+          />
+        ))}
+      </View>
+
+      <View style={styles.newPasswordContainer}>
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[
+              styles.passwordInput,
+              passwordError ? styles.inputError : null,
+            ]}
+            placeholder="Yeni Şifre"
+            value={newPassword}
+            onChangeText={text => {
+              setNewPassword(text);
+              validatePassword(text);
+            }}
+            secureTextEntry={!showPassword}
+            placeholderTextColor="#999"
+          />
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={() => setShowPassword(!showPassword)}>
+            <Text>
+              {showPassword ? (
+                <Image
+                  source={require('../../assets/view_1.png')}
+                  style={styles.eyeIcon}
+                />
+              ) : (
+                <Image
+                  source={require('../../assets/view_2.png')}
+                  style={styles.eyeIcon}
+                />
+              )}
+            </Text>
+          </TouchableOpacity>
+          {passwordError ? (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          ) : null}
         </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-          <Text style={styles.verifyButtonText}>Doğrula</Text>
-        </TouchableOpacity>
-
-        <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Kod almadınız mı? </Text>
-          <TouchableOpacity onPress={handleResendCode}>
-            <Text style={styles.resendLink}>Yeniden gönder</Text>
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[
+              styles.passwordInput,
+              confirmPasswordError ? styles.inputError : null,
+            ]}
+            placeholder="Şifreyi Doğrula"
+            value={confirmPassword}
+            onChangeText={text => {
+              setConfirmPassword(text);
+              validateConfirmPassword(text);
+            }}
+            secureTextEntry={!showConfirmPassword}
+            placeholderTextColor="#999"
+          />
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+            <Text>
+              {showConfirmPassword ? (
+                <Image
+                  source={require('../../assets/view_1.png')}
+                  style={styles.eyeIcon}
+                />
+              ) : (
+                <Image
+                  source={require('../../assets/view_2.png')}
+                  style={styles.eyeIcon}
+                />
+              )}
+            </Text>
           </TouchableOpacity>
+          {confirmPasswordError ? (
+            <Text style={styles.errorText}>{confirmPasswordError}</Text>
+          ) : null}
         </View>
       </View>
-    </KeyboardAvoidingView>
+
+      <TouchableOpacity
+        style={styles.verifyButton}
+        onPress={handleResetPassword}>
+        <Text style={styles.verifyButtonText}>Şifreyi Sıfırla</Text>
+      </TouchableOpacity>
+
+      <View style={styles.resendContainer}>
+        <Text style={styles.resendText}>Kod almadınız mı? </Text>
+        <TouchableOpacity>
+          <Text style={styles.resendLink}>Tekrar gönder</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
@@ -225,6 +325,50 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: windowHeight * 0.018,
     fontWeight: '600',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: windowWidth * 0.05,
+    marginTop: windowHeight * 0.02,
+  },
+  input: {
+    width: windowWidth * 0.13,
+    height: windowWidth * 0.13,
+    backgroundColor: '#F6F6F6',
+    borderRadius: 12,
+    fontSize: windowHeight * 0.025,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  inputFocused: {
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+  newPasswordContainer: {
+    width: '90%',
+    marginBottom: 20,
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  passwordInput: {
+    width: '100%',
+    height: 55,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 17,
+    width: 20,
+    height: 20,
   },
 });
 

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "568803054187",
+    "project_id": "healtassistantapp",
+    "storage_bucket": "healtassistantapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568803054187:android:1a7fec54c2fa4d1f90572e",
+        "android_client_info": {
+          "package_name": "com.health_assistant_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568803054187-lgrld2q9nfsa9ef56tvfhlcksfc7o5ku.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.health_assistant_app",
+            "certificate_hash": "d5e417b61d5dfeccb91016d62d83b98f333e0e75"
+          }
+        },
+        {
+          "client_id": "568803054187-f6fvksve7mbopo6orm6dqfgiojnrpadl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC20_1fDnyldfhIn0IBlRNI-Vf1UfczWRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568803054187-f6fvksve7mbopo6orm6dqfgiojnrpadl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
