@@ -121,9 +121,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
 
   const handleGoogleLogin = () => {
     try {
-      dispatch(loginWithGoogle() as any);
-    } catch (error) {
-      Alert.alert('Hata', 'Google ile giriş yapılırken bir hata oluştu');
+      dispatch(loginWithGoogle() as any)
+        .unwrap()
+        .then((user: SerializableUser) => {
+          console.log('Google ile giriş başarılı:', user);
+        })
+        .catch((error: any) => {
+          console.error('Google giriş hatası:', error);
+          Alert.alert(
+            'Google Giriş Hatası',
+            `Google ile giriş yapılırken bir hata oluştu: ${error.message}`,
+          );
+        });
+    } catch (error: any) {
+      console.error('Google giriş hatası:', error);
+      Alert.alert(
+        'Hata',
+        'Google ile giriş yapılırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
+      );
     }
   };
 

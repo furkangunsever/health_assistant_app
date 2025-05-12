@@ -22,6 +22,17 @@ export interface PasswordResetData {
   newPassword: string;
 }
 
+// Kullanıcı profil bilgileri
+export interface UserProfileData {
+  name: string;
+  age: number;
+  height: number;
+  weight: number;
+  chronicDiseases?: string;
+  allergies?: string;
+  medications?: string;
+}
+
 // Serialize edilebilir kullanıcı tipi
 export interface SerializableUser {
   uid: string;
@@ -34,6 +45,7 @@ export interface SerializableUser {
     creationTime?: string;
     lastSignInTime?: string;
   };
+  profileData?: UserProfileData;
 }
 
 export interface AuthState {

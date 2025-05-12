@@ -12,9 +12,15 @@ import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
 import {RootState} from '../../redux/store';
 import {logout} from '../../redux/actions/authActions';
 import CustomButton from '../../components/CustomButton';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {MainStackParamList} from '../../routes/NavigationTypes';
+
+type HomeScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Home'>;
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const {user} = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
@@ -54,7 +60,7 @@ const HomeScreen = () => {
           title="Profil Bilgilerim"
           variant="outline"
           containerStyle={styles.button}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('UserProfile')}
         />
 
         <CustomButton

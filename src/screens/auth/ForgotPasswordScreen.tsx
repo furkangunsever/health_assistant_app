@@ -56,7 +56,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           [
             {
               text: 'Tamam',
-              onPress: () => navigation.navigate('VerifyCode', {email}),
+              onPress: () => navigation.navigate('Login'),
             },
           ],
         );

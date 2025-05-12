@@ -7,7 +7,7 @@ import {
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   onAuthStateChanged as firebaseAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithCredential,
   updateProfile,
   sendEmailVerification as firebaseSendEmailVerification,
   confirmPasswordReset as firebaseConfirmPasswordReset,
@@ -15,10 +15,17 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import firebaseConfig from '../config/firebase.config';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 // Firebase başlatma
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Google Sign-In yapılandırması
+GoogleSignin.configure({
+  webClientId: firebaseConfig.clientId, // firebase console web client ID
+  offlineAccess: true,
+});
 
 // E-posta ve şifre ile giriş
 export const signIn = async (
@@ -95,13 +102,22 @@ export const onAuthStateChanged = (callback: (user: User | null) => void) => {
   return firebaseAuthStateChanged(auth, callback);
 };
 
-// Google ile giriş
+// Google ile giriş - güncellendi
 export const signInWithGoogle = async (): Promise<User> => {
   try {
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
+    // Google Sign-In ile oturum açma
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    const idToken = await GoogleSignin.getTokens();
+
+    // Google kimlik bilgilerini oluştur
+    const googleCredential = GoogleAuthProvider.credential(idToken.idToken);
+
+    // Firebase ile kimlik doğrulama
+    const userCredential = await signInWithCredential(auth, googleCredential);
     return userCredential.user;
   } catch (error: any) {
+    console.error('Google ile giriş hatası:', error);
     throw new Error(error.message);
   }
 };

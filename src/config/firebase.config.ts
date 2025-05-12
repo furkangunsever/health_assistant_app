@@ -14,6 +14,8 @@ const firebaseConfig = {
   messagingSenderId: '568803054187',
   appId: '1:568803054187:web:dcbad95b60f1217990572e',
   measurementId: 'G-59W5STLXVS',
+  clientId:
+    '568803054187-f6fvksve7mbopo6orm6dqfgiojnrpadl.apps.googleusercontent.com', // Firebase Web istemci ID'si
 };
 
 export default firebaseConfig;
