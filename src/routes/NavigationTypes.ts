@@ -22,3 +22,12 @@ export type MainStackParamList = {
   Settings: undefined;
   // Diğer ana sayfalar buraya eklenecek
 };
+
+// Tab Navigator için tip tanımlamaları
+export type TabNavigatorParamList = {
+  HomeTab: undefined;
+  CalendarTab: undefined;
+  AIAssistantTab: undefined;
+  NavigationTab: undefined;
+  SettingsTab: undefined;
+};

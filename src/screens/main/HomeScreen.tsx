@@ -6,11 +6,11 @@ import {
   StatusBar,
   Image,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
 import {RootState} from '../../redux/store';
-import {logout} from '../../redux/actions/authActions';
 import CustomButton from '../../components/CustomButton';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -19,56 +19,78 @@ import {MainStackParamList} from '../../routes/NavigationTypes';
 type HomeScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Home'>;
 
 const HomeScreen = () => {
-  const dispatch = useDispatch();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const {user} = useSelector((state: RootState) => state.auth);
-
-  const handleLogout = () => {
-    dispatch(logout() as any);
-  };
+  const {profile} = useSelector((state: RootState) => state.user);
 
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Sağlık Asistanım</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Anasayfa</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>Hoş Geldiniz!</Text>
-        <Text style={styles.emailText}>{user?.email}</Text>
-        {user?.displayName && (
-          <Text style={styles.displayNameText}>{user.displayName}</Text>
-        )}
-        {user?.photoURL && (
-          <Image source={{uri: user.photoURL}} style={styles.profileImage} />
-        )}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}>
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeText}>Hoş Geldiniz!</Text>
+          <Text style={styles.nameText}>
+            {profile?.name || user?.displayName || 'Değerli Kullanıcı'}
+          </Text>
+        </View>
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Sağlık Asistanınız</Text>
           <Text style={styles.infoDesc}>
             Sağlığınızı takip etmenin en kolay yolu. Yapacağınız işlemler için
-            menüyü kullanabilirsiniz.
+            aşağıdaki menüleri kullanabilirsiniz.
           </Text>
         </View>
 
-        <CustomButton
-          title="Profil Bilgilerim"
-          variant="outline"
-          containerStyle={styles.button}
-          onPress={() => navigation.navigate('UserProfile')}
-        />
+        <View style={styles.quickAccessSection}>
+          <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
 
-        <CustomButton
-          title="Sağlık Verilerim"
-          containerStyle={styles.button}
-          onPress={() => {}}
-        />
-      </View>
+          <View style={styles.buttonGrid}>
+            <CustomButton
+              title="Profil Bilgilerim"
+              variant="outline"
+              containerStyle={styles.gridButton}
+              onPress={() => navigation.navigate('UserProfile')}
+            />
+
+            <CustomButton
+              title="Sağlık Verilerim"
+              variant="outline"
+              containerStyle={styles.gridButton}
+              onPress={() => {}}
+            />
+
+            <CustomButton
+              title="Randevu Al"
+              variant="outline"
+              containerStyle={styles.gridButton}
+              onPress={() => {}}
+            />
+
+            <CustomButton
+              title="İlaç Hatırlatıcı"
+              variant="outline"
+              containerStyle={styles.gridButton}
+              onPress={() => {}}
+            />
+          </View>
+        </View>
+
+        <View style={styles.healthTipCard}>
+          <Text style={styles.healthTipTitle}>Günün Sağlık Önerisi</Text>
+          <Text style={styles.healthTipText}>
+            Günde en az 2 litre su içmek, metabolizmanızı hızlandırır ve
+            vücuttaki toksinlerin atılmasına yardımcı olur.
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -81,7 +103,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: SPACING.lg,
     paddingTop: hp(4),
     paddingBottom: SPACING.md,
@@ -92,18 +114,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.white,
   },
-  logo: {
-    width: wp(30),
-    height: hp(5),
-  },
-  logoutText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZE.md,
-  },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     padding: SPACING.lg,
-    alignItems: 'center',
+  },
+  welcomeSection: {
+    marginBottom: SPACING.lg,
   },
   welcomeText: {
     fontSize: FONT_SIZE.xl,
@@ -111,21 +129,10 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: SPACING.xs,
   },
-  emailText: {
+  nameText: {
     fontSize: FONT_SIZE.md,
     color: COLORS.primary,
-    marginBottom: SPACING.xl,
-  },
-  displayNameText: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.primary,
-    marginBottom: SPACING.xl,
-  },
-  profileImage: {
-    width: wp(30),
-    height: hp(5),
-    borderRadius: hp(2.5),
-    marginBottom: SPACING.xl,
+    fontWeight: 'bold',
   },
   infoCard: {
     width: '100%',
@@ -153,9 +160,40 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     lineHeight: hp(2.5),
   },
-  button: {
-    width: '90%',
+  quickAccessSection: {
+    marginBottom: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: COLORS.text,
     marginBottom: SPACING.md,
+  },
+  buttonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  gridButton: {
+    width: '48%',
+    marginBottom: SPACING.md,
+  },
+  healthTipCard: {
+    backgroundColor: COLORS.secondary,
+    borderRadius: 15,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  healthTipTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: SPACING.sm,
+  },
+  healthTipText: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.white,
+    lineHeight: hp(2.2),
   },
 });
 
