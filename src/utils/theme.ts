@@ -30,7 +30,7 @@ export const COLORS = {
   text: '#333333',
   white: '#FFFFFF',
   black: '#000000',
-  gray: '#CCCCCC',
+  gray: '#979797FF',
   lightGray: '#F5F5F5',
   error: '#FF5252',
   success: '#4CAF50',

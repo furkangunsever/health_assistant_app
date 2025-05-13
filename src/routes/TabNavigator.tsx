@@ -11,7 +11,7 @@ import {View, Text, StyleSheet, ImageSourcePropType, Image} from 'react-native';
 
 const Tab = createBottomTabNavigator<TabNavigatorParamList>();
 
-// Tab Icon bileşeni
+// Normal Tab Icon bileşeni
 interface TabIconProps {
   focused: boolean;
   label: string;
@@ -21,12 +21,40 @@ interface TabIconProps {
 const TabIcon: React.FC<TabIconProps> = ({focused, label, iconSource}) => {
   return (
     <View style={styles.tabIconContainer}>
+      <Image
+        source={iconSource}
+        style={[
+          styles.iconImage,
+          focused ? styles.activeIcon : styles.inactiveIcon,
+        ]}
+      />
+      <Text
+        style={[
+          styles.tabLabel,
+          focused ? styles.activeTabLabel : styles.inactiveTabLabel,
+        ]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
+
+// AI Assistant için özel dairesel icon bileşeni
+const CenterTabIcon: React.FC<TabIconProps> = ({
+  focused,
+  label,
+  iconSource,
+}) => {
+  return (
+    <View style={styles.centerTabIconContainer}>
       <View
         style={[
-          styles.iconCircle,
-          focused ? styles.activeIconCircle : styles.inactiveIconCircle,
+          styles.centerIconCircle,
+          focused
+            ? styles.activeCenterIconCircle
+            : styles.inactiveCenterIconCircle,
         ]}>
-        <Image source={iconSource} style={styles.iconImage} />
+        <Image source={iconSource} style={styles.centerIconImage} />
       </View>
       <Text
         style={[
@@ -57,7 +85,7 @@ const TabNavigator = () => {
             <TabIcon
               focused={focused}
               iconSource={require('../assets/home.png')}
-              label="Ana Sayfa"
+              label="Anasayfa"
             />
           ),
         }}
@@ -82,7 +110,11 @@ const TabNavigator = () => {
         options={{
           tabBarLabel: () => null,
           tabBarIcon: ({focused}: {focused: boolean}) => (
-            <TabIcon focused={focused} iconSource={require('../assets/generative.png')} label="AI Chat" />
+            <CenterTabIcon
+              focused={focused}
+              iconSource={require('../assets/generative.png')}
+              label="AI"
+            />
           ),
         }}
       />
@@ -130,40 +162,65 @@ const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 50,
   },
   iconImage: {
     width: 24,
     height: 24,
     resizeMode: 'contain',
   },
-  activeIconCircle: {
-    backgroundColor: COLORS.primary + '22', // %22 opacity
+  activeIcon: {
+    tintColor: COLORS.primary,
   },
-  inactiveIconCircle: {
-    backgroundColor: 'transparent',
-  },
-  iconText: {
-    fontSize: FONT_SIZE.sm,
+  inactiveIcon: {
+    tintColor: COLORS.gray,
   },
   tabLabel: {
     fontSize: FONT_SIZE.xs,
     fontWeight: '500',
     width: 70,
     textAlign: 'center',
-    paddingTop: 8,
+    marginTop: 4,
   },
   activeTabLabel: {
     color: COLORS.primary,
   },
   inactiveTabLabel: {
     color: COLORS.gray,
+  },
+  // Merkezdeki AI butonu için stiller
+  centerTabIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    marginTop: -25, // Üst tarafa doğru yükseltme
+  },
+  centerIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  activeCenterIconCircle: {
+    backgroundColor: COLORS.primary,
+  },
+  inactiveCenterIconCircle: {
+    backgroundColor: '#1DA1BC', // Daha açık mavi ton
+  },
+  centerIconImage: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
   },
 });
 
