@@ -10,13 +10,20 @@ import {
   Platform,
   PermissionsAndroid,
   ActivityIndicator,
+  Image,
+  Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE, Circle} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import {COLORS, FONT_SIZE, SPACING, hp} from '../../utils/theme';
+import BottomSheet from '../../components/BottomSheet';
+import LocationItem from '../../components/LocationItem';
 
 // Google Places API anahtarı
 const GOOGLE_PLACES_API_KEY = 'AIzaSyB8-uCj_ZX4k-gfeXGMgQgD8ZSRp7WpGg0';
+
+const {height} = Dimensions.get('window');
 
 interface LocationItem {
   id: string;
@@ -32,42 +39,6 @@ interface LocationItem {
   vicinity?: string;
 }
 
-// Varsayılan veriler (API yanıt alınamazsa gösterilecek)
-const FALLBACK_LOCATIONS: LocationItem[] = [
-  {
-    id: '1',
-    name: 'Özel Medicana Hastanesi',
-    address: 'Beylikdüzü, İstanbul',
-    distance: '2.3 km',
-    type: 'Hastane',
-    coordinate: {
-      latitude: 38.420556,
-      longitude: 27.130833,
-    },
-  },
-  {
-    id: '2',
-    name: 'Medilife Tıp Merkezi',
-    address: 'Esenyurt, İstanbul',
-    distance: '3.5 km',
-    type: 'Tıp Merkezi',
-    coordinate: {
-      latitude: 38.418333,
-      longitude: 27.128333,
-    },
-  },
-  {
-    id: '3',
-    name: 'Çağdaş Eczanesi',
-    address: 'Avcılar, İstanbul',
-    distance: '1.8 km',
-    type: 'Eczane',
-    coordinate: {
-      latitude: 38.423333,
-      longitude: 27.132222,
-    },
-  },
-];
 
 const PLACE_TYPES = {
   Hastane: 'hospital',
@@ -91,6 +62,9 @@ const NavigationScreen = () => {
   const [activeLocationType, setActiveLocationType] = useState('Hastane');
   const [locations, setLocations] = useState<LocationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<LocationItem | null>(
+    null,
+  );
 
   const filteredLocations = locations.filter(
     location =>
@@ -104,6 +78,8 @@ const NavigationScreen = () => {
     });
 
     requestLocationPermission();
+
+
   }, []);
 
   // Konum tipi değiştiğinde yakındaki yerleri tekrar ara
@@ -228,11 +204,10 @@ const NavigationScreen = () => {
         console.log(
           'API yanıtında sonuç bulunamadı, varsayılan verileri kullanıyoruz',
         );
-        setLocations(FALLBACK_LOCATIONS.filter(loc => loc.type === type));
+       
       }
     } catch (error) {
       console.error('Yakındaki yerler alınırken hata oluştu:', error);
-      setLocations(FALLBACK_LOCATIONS.filter(loc => loc.type === type));
     } finally {
       setLoading(false);
     }
@@ -277,65 +252,27 @@ const NavigationScreen = () => {
     }
   };
 
-  const renderLocationItem = (item: LocationItem) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.locationItem}
-      onPress={() => {
-        if (item.coordinate) {
-          const newRegion = {
-            ...region,
-            latitude: item.coordinate.latitude,
-            longitude: item.coordinate.longitude,
-          };
-          setRegion(newRegion);
-          mapRef.current?.animateToRegion(newRegion);
-        }
-      }}>
-      <View>
-        <Text style={styles.locationName}>{item.name}</Text>
-        <Text style={styles.locationAddress}>{item.address}</Text>
-        <View style={styles.locationInfo}>
-          <Text style={styles.locationType}>{item.type}</Text>
-          <Text style={styles.locationDistance}>{item.distance}</Text>
-        </View>
-        {item.rating && (
-          <Text style={styles.locationRating}>
-            ⭐ {item.rating.toFixed(1)} / 5
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const handleLocationPress = (location: LocationItem) => {
+    setSelectedLocation(location);
+
+    if (location.coordinate) {
+      const newRegion = {
+        latitude: location.coordinate.latitude,
+        longitude: location.coordinate.longitude,
+        latitudeDelta: 0.0122,
+        longitudeDelta: 0.0121,
+      };
+      mapRef.current?.animateToRegion(newRegion, 500);
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Navigasyon</Text>
-      </View>
+      
 
-      <View style={styles.filterContainer}>
-        {['Hastane', 'Eczane'].map(type => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.filterButton,
-              activeLocationType === type && styles.activeFilterButton,
-            ]}
-            onPress={() => setActiveLocationType(type)}>
-            <Text
-              style={[
-                styles.filterText,
-                activeLocationType === type && styles.activeFilterText,
-              ]}>
-              {type}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
+      {/* Harita */}
       <View style={styles.mapContainer}>
         <MapView
           ref={mapRef}
@@ -363,7 +300,27 @@ const NavigationScreen = () => {
                   coordinate={loc.coordinate}
                   title={loc.name}
                   description={loc.address}
-                />
+                  onPress={() => handleLocationPress(loc)}>
+                  <View style={styles.markerContainer}>
+                    <View
+                      style={[
+                        styles.marker,
+                        {
+                          backgroundColor:
+                            loc.type === 'Hastane' ? COLORS.primary : '#e74c3c',
+                        },
+                      ]}>
+                      <Image
+                        source={
+                          loc.type === 'Hastane'
+                            ? require('../../assets/hospital.png')
+                            : require('../../assets/medicine.png')
+                        }
+                        style={styles.markerIcon}
+                      />
+                    </View>
+                  </View>
+                </Marker>
               ),
           )}
         </MapView>
@@ -375,75 +332,100 @@ const NavigationScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.sectionTitle}>
-          Yakınınızdaki {activeLocationType}ler
-        </Text>
+      {/* Bottom Sheet */}
+      <BottomSheet
+        title="Sağlık Kuruluşları"
+        minHeight={height * 0.3}
+        maxHeight={height * 0.7}
+        initialPosition="collapsed">
+        <View style={styles.bottomSheetContent}>
+          <View style={styles.bottomSheetFilterContainer}>
+            {['Hastane', 'Eczane'].map(type => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.filterButton,
+                  activeLocationType === type && styles.activeFilterButton,
+                ]}
+                onPress={() => setActiveLocationType(type)}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    activeLocationType === type && styles.activeFilterText,
+                  ]}>
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {loading ? (
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-            style={styles.loadingIndicator}
-          />
-        ) : (
-          <ScrollView
-            style={styles.locationsList}
-            contentContainerStyle={styles.locationsListContent}>
-            {filteredLocations.length > 0 ? (
-              filteredLocations.map(renderLocationItem)
-            ) : (
-              <Text style={styles.noResultsText}>
-                Yakında {activeLocationType.toLowerCase()} bulunamadı.
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color={COLORS.primary}
+              style={styles.loadingIndicator}
+            />
+          ) : (
+            <ScrollView
+              style={styles.locationsList}
+              contentContainerStyle={styles.locationsListContent}
+              showsVerticalScrollIndicator={false}>
+              <Text style={styles.resultsTitle}>
+                Yakınındaki {activeLocationType.toLowerCase()}ler
               </Text>
-            )}
-          </ScrollView>
-        )}
-      </View>
-    </View>
+              {filteredLocations.length > 0 ? (
+                filteredLocations.map(location => (
+                  <LocationItem
+                    key={location.id}
+                    id={location.id}
+                    name={location.name}
+                    address={location.address}
+                    distance={location.distance}
+                    type={location.type}
+                    rating={location.rating}
+                    onPress={() => handleLocationPress(location)}
+                  />
+                ))
+              ) : (
+                <Text style={styles.noResultsText}>
+                  Yakında {activeLocationType.toLowerCase()} bulunamadı.
+                </Text>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </BottomSheet>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: COLORS.background},
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: hp(4),
+    paddingHorizontal: SPACING.lg,
+    paddingTop: Platform.OS === 'android' ? hp(4) : hp(2),
     paddingBottom: SPACING.md,
     backgroundColor: COLORS.primary,
+  },
+  backButton: {
+    marginRight: SPACING.md,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    tintColor: COLORS.white,
   },
   headerTitle: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
     color: COLORS.white,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    padding: SPACING.md,
-    backgroundColor: COLORS.white,
-  },
-  filterButton: {
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    borderRadius: 20,
-    marginHorizontal: SPACING.sm,
-    backgroundColor: COLORS.lightGray,
-  },
-  activeFilterButton: {
-    backgroundColor: COLORS.primary,
-  },
-  filterText: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.gray,
-  },
-  activeFilterText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
   },
   mapContainer: {
-    height: hp(40),
+    flex: 1,
     width: '100%',
   },
   map: {
@@ -464,70 +446,75 @@ const styles = StyleSheet.create({
   myLocationButtonText: {
     fontSize: 24,
   },
-  content: {
-    flex: 1,
-    padding: SPACING.lg,
+  markerContainer: {
+    alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: FONT_SIZE.lg,
+  marker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    elevation: 3,
+  },
+  markerIcon: {
+    width: 18,
+    height: 18,
+    tintColor: COLORS.white,
+  },
+  bottomSheetContent: {
+    flex: 1,
+    paddingHorizontal: SPACING.lg,
+  },
+  bottomSheetFilterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    borderBottomColor: COLORS.lightGray,
+  },
+  resultsTitle: {
+    fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
-    marginBottom: SPACING.sm,
     color: COLORS.text,
+    marginBottom: SPACING.md,
   },
   locationsList: {
     flex: 1,
   },
   locationsListContent: {
-    paddingBottom: SPACING.md,
-  },
-  locationItem: {
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    marginTop: SPACING.md,
-    padding: SPACING.md,
-    elevation: 3,
-  },
-  locationName: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  locationAddress: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
-  },
-  locationInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: SPACING.xs,
-  },
-  locationType: {
-    fontSize: FONT_SIZE.xs,
-    backgroundColor: COLORS.lightGray,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    color: COLORS.gray,
-  },
-  locationDistance: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.secondary,
-    fontWeight: 'bold',
-  },
-  locationRating: {
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.secondary,
-    marginTop: SPACING.xs,
+    paddingVertical: SPACING.md,
   },
   loadingIndicator: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: SPACING.xl,
   },
   noResultsText: {
     textAlign: 'center',
     marginTop: SPACING.xl,
     color: COLORS.gray,
     fontSize: FONT_SIZE.md,
+  },
+  filterButton: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: 10,
+    marginHorizontal: SPACING.sm,
+    backgroundColor: COLORS.lightGray,
+  },
+  activeFilterButton: {
+    backgroundColor: COLORS.primary,
+  },
+  filterText: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.gray,
+  },
+  activeFilterText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
   },
 });
 
