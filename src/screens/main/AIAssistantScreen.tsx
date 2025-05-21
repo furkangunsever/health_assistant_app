@@ -9,14 +9,18 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
+import {sendMessageToAI} from '../../service/aiService';
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  etiket?: string;
 }
 
 const AIAssistantScreen = () => {
@@ -29,11 +33,11 @@ const AIAssistantScreen = () => {
       timestamp: new Date(),
     },
   ]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (message.trim() === '') return;
 
-    // Kullanıcı mesajını ekle
     const userMessage: Message = {
       id: Date.now().toString(),
       text: message,
@@ -43,17 +47,31 @@ const AIAssistantScreen = () => {
 
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setMessage('');
+    setIsLoading(true);
 
-    // AI yanıtını simüle et (gerçek bir API bağlantısı yapılacak)
-    setTimeout(() => {
+    try {
+      const response = await sendMessageToAI('cuma', message);
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Teşekkürler! Sorunuzu aldım ve üzerinde çalışıyorum. Yakında size daha detaylı bilgi vereceğim.',
+        text: response.yanit,
+        isUser: false,
+        timestamp: new Date(),
+        etiket: response.etiket,
+      };
+
+      setMessages(prevMessages => [...prevMessages, aiResponse]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages(prevMessages => [...prevMessages, aiResponse]);
-    }, 1000);
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderMessage = ({item}: {item: Message}) => (
@@ -106,12 +124,24 @@ const AIAssistantScreen = () => {
           placeholder="Mesajınızı yazın..."
           placeholderTextColor={COLORS.gray}
           multiline
+          editable={!isLoading}
         />
         <TouchableOpacity
-          style={[styles.sendButton, !message.trim() && styles.disabledButton]}
+          style={[
+            styles.sendButton,
+            (!message.trim() || isLoading) && styles.disabledButton,
+          ]}
           onPress={sendMessage}
-          disabled={!message.trim()}>
-          <Text style={styles.sendButtonText}>Gönder</Text>
+          disabled={!message.trim() || isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color={COLORS.white} size="small" />
+          ) : (
+            <Image
+              source={require('../../assets/send.png')}
+              style={styles.sendButtonImage}
+              resizeMode="contain"
+            />
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -198,6 +228,10 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.sm,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sendButtonImage: {
+    width: wp(5),
+    height: hp(5),
   },
   disabledButton: {
     backgroundColor: COLORS.gray,
