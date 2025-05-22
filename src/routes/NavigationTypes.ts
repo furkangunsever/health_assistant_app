@@ -20,6 +20,7 @@ export type MainStackParamList = {
   Profile: undefined;
   HealthData: undefined;
   Settings: undefined;
+  DigitalTwin: undefined;
   // Diğer ana sayfalar buraya eklenecek
 };
 
@@ -30,4 +31,5 @@ export type TabNavigatorParamList = {
   AIAssistantTab: undefined;
   NavigationTab: undefined;
   SettingsTab: undefined;
+  DigitalTwinTab: undefined;
 };

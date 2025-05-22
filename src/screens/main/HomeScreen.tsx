@@ -151,11 +151,11 @@ const HomeScreen = () => {
               onPress={() => navigation.navigate('UserProfile')}>
               <View style={[styles.iconCircle, {backgroundColor: '#3498db'}]}>
                 <Image
-                  source={require('../../assets/user.png')}
+                  source={require('../../assets/settings.png')}
                   style={styles.menuIcon}
                 />
               </View>
-              <Text style={styles.menuText}>Profil</Text>
+              <Text style={styles.menuText}>Ayarlar</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickAccessItem}>
@@ -168,14 +168,16 @@ const HomeScreen = () => {
               <Text style={styles.menuText}>Randevular</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickAccessItem}>
-              <View style={[styles.iconCircle, {backgroundColor: '#e74c3c'}]}>
+            <TouchableOpacity
+              style={styles.quickAccessItem}
+              onPress={() => navigation.navigate('DigitalTwin')}>
+              <View style={styles.iconCircle}>
                 <Image
-                  source={require('../../assets/medicine.png')}
-                  style={styles.menuIcon}
+                  source={require('../../assets/digital-twin.png')}
+                  style={styles.menuIconv1}
                 />
               </View>
-              <Text style={styles.menuText}>İlaçlarım</Text>
+              <Text style={styles.menuText}>Dijital İkiz</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickAccessItem}>
@@ -196,7 +198,7 @@ const HomeScreen = () => {
 
           <View style={styles.tipCard}>
             <Image
-              source={require('../../assets/generative.png')}
+              source={require('../../assets/water.png')}
               style={styles.tipIcon}
             />
             <View style={styles.tipContent}>
@@ -210,7 +212,7 @@ const HomeScreen = () => {
 
           <View style={styles.tipCard}>
             <Image
-              source={require('../../assets/navigate.png')}
+              source={require('../../assets/running.png')}
               style={styles.tipIcon}
             />
             <View style={styles.tipContent}>
@@ -421,7 +423,10 @@ const styles = StyleSheet.create({
   menuIcon: {
     width: 24,
     height: 24,
-    tintColor: COLORS.white,
+  },
+  menuIconv1: {
+    width: 40,
+    height: 40,
   },
   menuText: {
     fontSize: FONT_SIZE.md,
@@ -443,10 +448,11 @@ const styles = StyleSheet.create({
   },
   tipIcon: {
     width: 40,
-    height: 40,
+    height: 30,
     borderRadius: 20,
     marginRight: SPACING.md,
     tintColor: COLORS.primary,
+    resizeMode: 'contain',
   },
   tipContent: {
     flex: 1,

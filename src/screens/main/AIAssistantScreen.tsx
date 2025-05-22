@@ -50,7 +50,7 @@ const AIAssistantScreen = () => {
     setIsLoading(true);
 
     try {
-      const response = await sendMessageToAI('cuma', message);
+      const response = await sendMessageToAI('tes_user27', message);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
