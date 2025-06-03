@@ -5,6 +5,7 @@ import {
   StyleSheet,
   StatusBar,
   Image,
+  ImageBackground,
   TouchableOpacity,
   ScrollView,
   Dimensions,
@@ -147,15 +148,16 @@ const HomeScreen = () => {
 
           <View style={styles.quickAccessGrid}>
             <TouchableOpacity
-              style={styles.quickAccessItem}
-              onPress={() => navigation.navigate('UserProfile')}>
-              <View style={[styles.iconCircle, {backgroundColor: '#3498db'}]}>
-                <Image
-                  source={require('../../assets/settings.png')}
-                  style={styles.menuIcon}
-                />
-              </View>
-              <Text style={styles.menuText}>Ayarlar</Text>
+              style={styles.quickAccessItem_2}
+              onPress={() => navigation.navigate('DigitalTwin')}>
+              <ImageBackground
+                source={require('../../assets/digital_twin_human_1.png')}
+                style={styles.digitalTwinBackground}
+                imageStyle={styles.digitalTwinBackgroundImage}>
+                <View style={styles.digitalTwinOverlay}>
+                  <Text style={styles.digitalTwinText}>Dijital İkiz</Text>
+                </View>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickAccessItem}>
@@ -166,18 +168,6 @@ const HomeScreen = () => {
                 />
               </View>
               <Text style={styles.menuText}>Randevular</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.quickAccessItem}
-              onPress={() => navigation.navigate('DigitalTwin')}>
-              <View style={styles.iconCircle}>
-                <Image
-                  source={require('../../assets/digital-twin.png')}
-                  style={styles.menuIconv1}
-                />
-              </View>
-              <Text style={styles.menuText}>Dijital İkiz</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickAccessItem}>
@@ -398,6 +388,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    
+    
   },
   quickAccessItem: {
     width: '48%',
@@ -411,6 +404,43 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+  },
+  quickAccessItem_2: {
+    width: '80%',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    marginBottom: SPACING.md,
+    shadowColor: COLORS.black,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    overflow: 'hidden',
+    
+  },
+  digitalTwinBackground: {
+    width: '100%',
+    height: 145,
+    justifyContent: 'flex-end',
+  },
+  digitalTwinBackgroundImage: {
+    borderRadius: 16,
+    opacity: 0.8,
+  },
+  digitalTwinOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    padding: SPACING.md,
+    alignItems: 'center',
+  },
+  digitalTwinText: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    textAlign: 'center',
   },
   iconCircle: {
     width: 50,
@@ -423,10 +453,6 @@ const styles = StyleSheet.create({
   menuIcon: {
     width: 24,
     height: 24,
-  },
-  menuIconv1: {
-    width: 40,
-    height: 40,
   },
   menuText: {
     fontSize: FONT_SIZE.md,
