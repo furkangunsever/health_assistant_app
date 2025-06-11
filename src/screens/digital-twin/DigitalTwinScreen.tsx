@@ -87,11 +87,12 @@ const DigitalTwinScreen: React.FC = () => {
 
   const renderModelView = () => {
     return (
-      <ScrollView
-        contentContainerStyle={styles.modelContainer}
-        showsVerticalScrollIndicator={false}>
-        <DigitalTwinModelCard model={mockDigitalTwinModel} />
-      </ScrollView>
+      <View style={styles.fullScreenContainer}>
+        <DigitalTwinModelCard
+          model={mockDigitalTwinModel}
+          tags={mockDigitalTwinTags}
+        />
+      </View>
     );
   };
 
@@ -141,9 +142,8 @@ const styles = StyleSheet.create({
     padding: 15,
     paddingBottom: 80,
   },
-  modelContainer: {
-    padding: 5,
-    paddingBottom: 80,
+  fullScreenContainer: {
+    flex: 1,
   },
 });
 

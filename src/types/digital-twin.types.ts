@@ -4,6 +4,15 @@ export interface DigitalTwinTag {
   value: string;
   status: 'normal' | 'warning' | 'danger';
   date: string;
+  bodyPart?:
+    | 'head'
+    | 'chest'
+    | 'arm'
+    | 'back'
+    | 'leg'
+    | 'neck'
+    | 'abdomen'
+    | 'full';
 }
 
 export interface DigitalTwinModel {

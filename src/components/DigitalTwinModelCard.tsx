@@ -1,187 +1,193 @@
-import React from 'react';
-import {View, Text, StyleSheet, Image} from 'react-native';
-import {DigitalTwinModel} from '../types/digital-twin.types';
+import React, {useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import Body from 'react-native-body-highlighter';
+import {DigitalTwinModel, DigitalTwinTag} from '../types/digital-twin.types';
 
 interface DigitalTwinModelCardProps {
   model: DigitalTwinModel;
+  tags?: DigitalTwinTag[];
 }
 
-const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({model}) => {
+const {width, height} = Dimensions.get('window');
+
+const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
+  model,
+  tags = [],
+}) => {
+  const [side, setSide] = useState<'front' | 'back'>('front');
+
+  // Sağlık etiketlerine göre hangi vücut bölgelerinin renklendirilmesi gerektiğini belirle
+  const getHighlightedBodyParts = () => {
+    if (!tags || tags.length === 0) {
+      return [];
+    }
+
+    const activeIssues = tags.filter(
+      tag => tag.status === 'warning' || tag.status === 'danger',
+    );
+    const bodyHighlights: any[] = [];
+
+    activeIssues.forEach(tag => {
+      let bodyParts: string[] = [];
+      let intensity = tag.status === 'danger' ? 2 : 1;
+
+      // Tag'deki bodyPart'ı Body highlighter'ın kabul ettiği format çevir
+      switch (tag.bodyPart) {
+        case 'head':
+          bodyParts = ['head'];
+          break;
+        case 'chest':
+          bodyParts = ['chest'];
+          break;
+        case 'arm':
+          bodyParts = ['biceps', 'forearm'];
+          break;
+        case 'back':
+          bodyParts = ['upper-back', 'lower-back'];
+          break;
+        case 'leg':
+          bodyParts = ['quadriceps', 'calves'];
+          break;
+        case 'neck':
+          bodyParts = ['neck'];
+          break;
+        case 'abdomen':
+          bodyParts = ['abs'];
+          break;
+        default:
+          return; // Tanımsız body part varsa atla
+      }
+
+      bodyParts.forEach(part => {
+        bodyHighlights.push({
+          slug: part,
+          intensity: intensity,
+        });
+      });
+    });
+
+    return bodyHighlights;
+  };
+
+  // Vücut bölgesine tıklama olayı
+  const onBodyPartPress = (bodyPart: any, bodyPartSide?: string) => {
+    console.log('Tıklanan vücut bölgesi:', bodyPart, bodyPartSide);
+    // Burada istediğiniz aksiyonu yapabilirsiniz
+  };
+
+  // Sağlık durumu özeti
+  const getHealthSummary = () => {
+    const activeIssues = tags.filter(
+      tag => tag.status === 'warning' || tag.status === 'danger',
+    );
+    return {
+      totalIssues: activeIssues.length,
+      dangerCount: activeIssues.filter(tag => tag.status === 'danger').length,
+      warningCount: activeIssues.filter(tag => tag.status === 'warning').length,
+    };
+  };
+
+  const healthSummary = getHealthSummary();
+  const colors = ['#FF9800', '#F44336']; // Turuncu (warning), Kırmızı (danger)
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require('../assets/digital-twin.png')}
-          style={styles.avatar}
-          resizeMode="contain"
+      {/* Sağlık Durumu Özeti */}
+      <View style={styles.healthSummary}>
+        <Text style={styles.healthTitle}>Dijital İkiz Sağlık Durumu</Text>
+        {healthSummary.totalIssues > 0 ? (
+          <Text style={styles.healthInfo}>
+            {healthSummary.dangerCount} kritik, {healthSummary.warningCount}{' '}
+            uyarı
+          </Text>
+        ) : (
+          <Text style={styles.healthGood}>Sağlık durumu iyi</Text>
+        )}
+      </View>
+
+      {/* 3D İnsan Modeli */}
+      <View style={styles.bodyContainer}>
+        <Body
+          data={getHighlightedBodyParts()}
+          onBodyPartPress={onBodyPartPress}
+          colors={colors}
+          gender={model.gender === 'female' ? 'female' : 'male'}
+          side={side}
+          scale={2.2}
+          border="none"
         />
-        <View style={styles.headerInfo}>
-          <Text style={styles.title}>Dijital İkiziniz</Text>
-          <Text style={styles.subtitle}>
-            Son güncelleme: {model.lastUpdated}
-          </Text>
-        </View>
       </View>
 
-      <View style={styles.infoSection}>
-        <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
-        <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Yaş</Text>
-            <Text style={styles.infoValue}>{model.age}</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Cinsiyet</Text>
-            <Text style={styles.infoValue}>
-              {model.gender === 'male'
-                ? 'Erkek'
-                : model.gender === 'female'
-                ? 'Kadın'
-                : 'Diğer'}
-            </Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Kan Grubu</Text>
-            <Text style={styles.infoValue}>{model.bloodType}</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Boy</Text>
-            <Text style={styles.infoValue}>{model.height} cm</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Kilo</Text>
-            <Text style={styles.infoValue}>{model.weight} kg</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>BMI</Text>
-            <Text style={styles.infoValue}>
-              {(model.weight / Math.pow(model.height / 100, 2)).toFixed(1)}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.listSection}>
-        <Text style={styles.sectionTitle}>Kronik Hastalıklar</Text>
-        {model.chronicDiseases.length > 0 ? (
-          model.chronicDiseases.map((disease, index) => (
-            <Text key={index} style={styles.listItem}>
-              • {disease}
-            </Text>
-          ))
-        ) : (
-          <Text style={styles.emptyListText}>
-            Kronik hastalık kaydı bulunmamaktadır.
-          </Text>
-        )}
-      </View>
-
-      <View style={styles.listSection}>
-        <Text style={styles.sectionTitle}>Alerjiler</Text>
-        {model.allergies.length > 0 ? (
-          model.allergies.map((allergy, index) => (
-            <Text key={index} style={styles.listItem}>
-              • {allergy}
-            </Text>
-          ))
-        ) : (
-          <Text style={styles.emptyListText}>
-            Alerji kaydı bulunmamaktadır.
-          </Text>
-        )}
-      </View>
+      {/* Ön/Arka Değiştirme Butonu */}
+      <TouchableOpacity
+        style={styles.flipButton}
+        onPress={() => setSide(side === 'front' ? 'back' : 'front')}>
+        <Text style={styles.flipButtonText}>
+          {side === 'front' ? 'Arkayı Göster' : 'Önü Göster'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    margin: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E1F5FE',
-  },
-  headerInfo: {
-    marginLeft: 15,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  subtitle: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 4,
-  },
-  infoSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 10,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  infoItem: {
     flex: 1,
+    backgroundColor: '#F5F7FA',
+    width: width,
+    height: height,
+  },
+  healthSummary: {
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    marginTop: 10,
+    marginHorizontal: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    padding: 10,
-    borderRadius: 8,
-    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  infoLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333333',
-  },
-  listSection: {
-    marginBottom: 20,
-  },
-  listItem: {
-    fontSize: 14,
+  healthTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#333333',
     marginBottom: 5,
-    marginLeft: 10,
   },
-  emptyListText: {
+  healthInfo: {
     fontSize: 14,
-    color: '#888888',
-    fontStyle: 'italic',
-    marginLeft: 10,
+    color: '#F44336',
+  },
+  healthGood: {
+    fontSize: 14,
+    color: '#4CAF50',
+  },
+  bodyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  flipButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  flipButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
