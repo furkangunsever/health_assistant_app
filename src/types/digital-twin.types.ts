@@ -12,6 +12,7 @@ export interface DigitalTwinTag {
     | 'leg'
     | 'neck'
     | 'abdomen'
+    | 'systemic'
     | 'full';
 }
 

@@ -389,8 +389,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
-    
-    
   },
   quickAccessItem: {
     width: '48%',
@@ -408,7 +406,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   quickAccessItem_2: {
-    width: '80%',
+    width: '100%',
     backgroundColor: COLORS.white,
     borderRadius: 16,
     marginBottom: SPACING.md,
@@ -420,7 +418,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
     overflow: 'hidden',
-    
   },
   digitalTwinBackground: {
     width: '100%',

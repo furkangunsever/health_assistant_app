@@ -1,90 +1,171 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { DigitalTwinTag } from '../types/digital-twin.types';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {DigitalTwinTag} from '../types/digital-twin.types';
+import {
+  COLORS,
+  FONT_SIZE,
+  SPACING,
+  BORDER_RADIUS,
+  SHADOW,
+} from '../utils/theme';
 
 interface DigitalTwinTagItemProps {
   tag: DigitalTwinTag;
+  onDelete?: () => void;
 }
 
-const DigitalTwinTagItem: React.FC<DigitalTwinTagItemProps> = ({ tag }) => {
+const DigitalTwinTagItem: React.FC<DigitalTwinTagItemProps> = ({
+  tag,
+  onDelete,
+}) => {
   const getStatusColor = () => {
     switch (tag.status) {
       case 'normal':
-        return '#4CAF50'; // Yeşil
+        return COLORS.success; // Tema success rengi
       case 'warning':
-        return '#FF9800'; // Turuncu
+        return COLORS.warning; // Tema warning rengi
       case 'danger':
-        return '#F44336'; // Kırmızı
+        return COLORS.error; // Tema error rengi
       default:
-        return '#4CAF50';
+        return COLORS.success;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (tag.status) {
+      case 'normal':
+        return 'Normal';
+      case 'warning':
+        return 'Dikkat';
+      case 'danger':
+        return 'Risk';
+      default:
+        return 'Normal';
+    }
+  };
+
+  const getBodyPartText = () => {
+    switch (tag.bodyPart) {
+      case 'head':
+        return '🧠 Baş';
+      case 'chest':
+        return '🫁 Göğüs';
+      case 'arm':
+        return '💪 Kol';
+      case 'back':
+        return '🔄 Sırt';
+      case 'leg':
+        return '🦵 Bacak';
+      case 'neck':
+        return '🦒 Boyun';
+      case 'abdomen':
+        return '🫃 Karın';
+      case 'systemic':
+        return '🌐 Sistemik';
+      case 'full':
+        return '👤 Genel';
+      default:
+        return '👤 Genel';
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tagInfo}>
-        <Text style={styles.tagName}>{tag.name}</Text>
-        <Text style={styles.tagDate}>{tag.date}</Text>
+    <View style={[styles.container, {borderLeftColor: getStatusColor()}]}>
+      <View style={styles.mainContent}>
+        <View style={styles.headerRow}>
+          <Text style={styles.tagName}>{tag.name}</Text>
+          <View
+            style={[styles.statusBadge, {backgroundColor: getStatusColor()}]}>
+            <Text style={styles.statusText}>{getStatusText()}</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.bodyPartText}>{getBodyPartText()}</Text>
+          <Text style={styles.tagDate}>📅 {tag.date}</Text>
+        </View>
       </View>
-      <View style={styles.valueContainer}>
-        <Text style={styles.tagValue}>{tag.value}</Text>
-        <View
-          style={[
-            styles.statusIndicator,
-            { backgroundColor: getStatusColor() },
-          ]}
-        />
-      </View>
+
+      {onDelete && (
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={onDelete}
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <Text style={styles.deleteButtonText}>✕</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...SHADOW.small,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.lightGray,
+  },
+  mainContent: {
+    flex: 1,
+  },
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  tagInfo: {
-    flex: 1,
+    marginBottom: SPACING.sm,
   },
   tagName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 4,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    color: COLORS.text,
+    flex: 1,
+    marginRight: SPACING.sm,
   },
-  tagDate: {
-    fontSize: 12,
-    color: '#888888',
+  statusBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.md,
   },
-  valueContainer: {
+  statusText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+  infoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tagValue: {
-    fontSize: 16,
+  bodyPartText: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.gray,
     fontWeight: '500',
-    color: '#333333',
-    marginRight: 8,
   },
-  statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  tagDate: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.gray,
+    opacity: 0.8,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: SPACING.md,
+    ...SHADOW.small,
+  },
+  deleteButtonText: {
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
   },
 });
 
-export default DigitalTwinTagItem; 
+export default DigitalTwinTagItem;

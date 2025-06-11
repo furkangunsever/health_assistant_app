@@ -69,7 +69,7 @@ export const mockDigitalTwinTags: DigitalTwinTag[] = [
 
 export const mockDigitalTwinModel: DigitalTwinModel = {
   id: '123456',
-  userId: 'user123',
+  userId: 'user12',
   height: 175,
   weight: 75,
   age: 35,

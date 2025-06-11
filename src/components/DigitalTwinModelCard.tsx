@@ -8,6 +8,14 @@ import {
 } from 'react-native';
 import Body from 'react-native-body-highlighter';
 import {DigitalTwinModel, DigitalTwinTag} from '../types/digital-twin.types';
+import {convertTagsToBodyHighlights} from '../utils/digitalTwinMapper';
+import {
+  COLORS,
+  FONT_SIZE,
+  SPACING,
+  BORDER_RADIUS,
+  SHADOW,
+} from '../utils/theme';
 
 interface DigitalTwinModelCardProps {
   model: DigitalTwinModel;
@@ -94,33 +102,38 @@ const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
   };
 
   const healthSummary = getHealthSummary();
-  const colors = ['#FF9800', '#F44336']; // Turuncu (warning), Kırmızı (danger)
+  const bodyHighlights = convertTagsToBodyHighlights(tags);
+
+  // Debug: Etiketleri ve highlights'ları kontrol et
+  console.log('=== DigitalTwinModelCard Debug ===');
+  console.log('Tags:', tags);
+  console.log('Body Highlights:', bodyHighlights);
+  console.log('Health Summary:', healthSummary);
+
+  const colors = [COLORS.warning, COLORS.error]; // Tema renkleri kullan
+
+  // Model renk seçenekleri
+  const modelColors = {
+    // Ana model rengi (vücut rengi)
+    bodyColor: '#E8F4FD', // Açık mavi ton
+    // Highlight renkleri (sağlık sorunları için)
+    highlightColors: ['#FFA726', '#EF5350'], // Turuncu ve kırmızı
+    // Çizgi rengi
+    strokeColor: '#1976D2', // Koyu mavi
+  };
 
   return (
     <View style={styles.container}>
-      {/* Sağlık Durumu Özeti */}
-      <View style={styles.healthSummary}>
-        <Text style={styles.healthTitle}>Dijital İkiz Sağlık Durumu</Text>
-        {healthSummary.totalIssues > 0 ? (
-          <Text style={styles.healthInfo}>
-            {healthSummary.dangerCount} kritik, {healthSummary.warningCount}{' '}
-            uyarı
-          </Text>
-        ) : (
-          <Text style={styles.healthGood}>Sağlık durumu iyi</Text>
-        )}
-      </View>
-
       {/* 3D İnsan Modeli */}
       <View style={styles.bodyContainer}>
         <Body
-          data={getHighlightedBodyParts()}
+          data={bodyHighlights as any}
           onBodyPartPress={onBodyPartPress}
-          colors={colors}
+          colors={modelColors.highlightColors}
           gender={model.gender === 'female' ? 'female' : 'male'}
           side={side}
-          scale={2.2}
-          border="none"
+          scale={1.7}
+          border={modelColors.strokeColor}
         />
       </View>
 
@@ -139,54 +152,51 @@ const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: COLORS.lightGray,
     width: width,
     height: height,
   },
   healthSummary: {
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    marginTop: 10,
-    marginHorizontal: 15,
-    borderRadius: 10,
+    backgroundColor: COLORS.white,
+    padding: SPACING.lg,
+    marginTop: SPACING.md,
+    marginHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...SHADOW.medium,
   },
   healthTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 5,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
   },
   healthInfo: {
-    fontSize: 14,
-    color: '#F44336',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.error,
   },
   healthGood: {
-    fontSize: 14,
-    color: '#4CAF50',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.success,
   },
   bodyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: SPACING.lg,
   },
   flipButton: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xl,
+    borderRadius: BORDER_RADIUS.xl,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
+    ...SHADOW.small,
   },
   flipButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
   },
 });
