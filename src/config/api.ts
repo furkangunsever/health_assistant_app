@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: 'https://e0f1-34-71-59-207.ngrok-free.app',
+  BASE_URL: 'https://3d83-34-172-248-197.ngrok-free.app',
   ENDPOINTS: {
     AI_RESPONSE: '/api/yanit',
   },

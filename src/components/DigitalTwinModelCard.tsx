@@ -37,13 +37,17 @@ const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
     }
 
     const activeIssues = tags.filter(
-      tag => tag.status === 'warning' || tag.status === 'danger',
+      tag =>
+        tag.status === 'normal' ||
+        tag.status === 'warning' ||
+        tag.status === 'danger',
     );
     const bodyHighlights: any[] = [];
 
     activeIssues.forEach(tag => {
       let bodyParts: string[] = [];
-      let intensity = tag.status === 'danger' ? 2 : 1;
+      let intensity =
+        tag.status === 'danger' ? 3 : tag.status === 'warning' ? 2 : 1;
 
       // Tag'deki bodyPart'ı Body highlighter'ın kabul ettiği format çevir
       switch (tag.bodyPart) {
@@ -92,12 +96,16 @@ const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
   // Sağlık durumu özeti
   const getHealthSummary = () => {
     const activeIssues = tags.filter(
-      tag => tag.status === 'warning' || tag.status === 'danger',
+      tag =>
+        tag.status === 'normal' ||
+        tag.status === 'warning' ||
+        tag.status === 'danger',
     );
     return {
       totalIssues: activeIssues.length,
-      dangerCount: activeIssues.filter(tag => tag.status === 'danger').length,
+      normalCount: activeIssues.filter(tag => tag.status === 'normal').length,
       warningCount: activeIssues.filter(tag => tag.status === 'warning').length,
+      dangerCount: activeIssues.filter(tag => tag.status === 'danger').length,
     };
   };
 
@@ -116,8 +124,8 @@ const DigitalTwinModelCard: React.FC<DigitalTwinModelCardProps> = ({
   const modelColors = {
     // Ana model rengi (vücut rengi)
     bodyColor: '#E8F4FD', // Açık mavi ton
-    // Highlight renkleri (sağlık sorunları için)
-    highlightColors: ['#FFA726', '#EF5350'], // Turuncu ve kırmızı
+    // Highlight renkleri (sağlık durumları için)
+    highlightColors: ['#4CAF50', '#FFA726', '#EF5350'], // Yeşil (normal), Turuncu (uyarı), Kırmızı (tehlike)
     // Çizgi rengi
     strokeColor: '#1976D2', // Koyu mavi
   };

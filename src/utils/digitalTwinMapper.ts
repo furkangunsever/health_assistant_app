@@ -146,9 +146,9 @@ export const bodyPartToHighlighterMap: Record<
 
 // Durum seviyesine göre renk yoğunluğu
 export const statusToIntensityMap: Record<DigitalTwinTag['status'], number> = {
-  normal: 0, // Normal durumda renklendirme yok
-  warning: 1, // Orta yoğunluk
-  danger: 2, // Yüksek yoğunluk
+  normal: 1, // Normal durumda hafif renklendirme (0 yerine 1)
+  warning: 2, // Orta yoğunluk
+  danger: 3, // Yüksek yoğunluk
 };
 
 // Durum seviyesine göre renk (tema renkleriyle uyumlu)
@@ -159,7 +159,7 @@ export const statusToColorMap: Record<DigitalTwinTag['status'], string> = {
 };
 
 // Body Highlighter için renk paleti
-export const bodyHighlighterColors = ['#FF9800', '#FF5252']; // [warning, danger]
+export const bodyHighlighterColors = ['#4CAF50', '#FF9800', '#FF5252']; // [normal, warning, danger]
 
 /**
  * AI'dan gelen etiketi DigitalTwinTag formatına dönüştürür
@@ -279,12 +279,15 @@ export const convertTagsToBodyHighlights = (tags: DigitalTwinTag[]) => {
   console.log('=== convertTagsToBodyHighlights Debug ===');
   console.log('Input tags:', tags);
 
-  // Sadece warning ve danger durumundaki etiketleri göster
+  // Tüm durumları göster (normal, warning, danger)
   const activeIssues = tags.filter(
-    tag => tag.status === 'warning' || tag.status === 'danger',
+    tag =>
+      tag.status === 'normal' ||
+      tag.status === 'warning' ||
+      tag.status === 'danger',
   );
 
-  console.log('Active issues (warning/danger):', activeIssues);
+  console.log('Active issues (normal/warning/danger):', activeIssues);
 
   activeIssues.forEach(tag => {
     const bodyParts = bodyPartToHighlighterMap[tag.bodyPart || 'full'];
@@ -296,7 +299,8 @@ export const convertTagsToBodyHighlights = (tags: DigitalTwinTag[]) => {
     console.log(`Mapped body parts:`, bodyParts);
     console.log(`Intensity:`, intensity);
 
-    if (bodyParts && intensity > 0) {
+    if (bodyParts && intensity >= 1) {
+      // Normal durumu da dahil etmek için >= 1
       bodyParts.forEach(part => {
         // Aynı vücut bölgesi için birden fazla etiket varsa, en yüksek yoğunluğu al
         const existingIndex = bodyHighlights.findIndex(h => h.slug === part);
