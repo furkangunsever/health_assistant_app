@@ -4,7 +4,7 @@ import {DigitalTwinTag} from '../types/digital-twin.types';
 const labelToBodyPartMap: Record<string, DigitalTwinTag['bodyPart'] | null> = {
   // Baş ve Boyun
   Migren: 'head',
-  migren: 'head',
+  'Migren, İç Kulak': 'head',
   'Migren, İç Kulak Bozukluğu': 'head',
   'Migren veya Viral Enfeksiyon': 'head',
   'Baş ağrısı': 'head',
@@ -17,7 +17,7 @@ const labelToBodyPartMap: Record<string, DigitalTwinTag['bodyPart'] | null> = {
 
   // Göğüs
   Grip: 'chest',
-  'Grip veya Soğuk Algınlığı': 'chest',
+  'Grip veya Soğuk': 'chest',
   'Grip/Soğuk Algınlığı': 'chest',
   'Gribe işaret eden belirtiler': 'chest',
   'Soğuk algınlığı': 'chest',
@@ -78,7 +78,7 @@ const labelToBodyPartMap: Record<string, DigitalTwinTag['bodyPart'] | null> = {
   'Sağlık sorunu tespiti yapılamadı': null,
 
   // Eski etiketler (backward compatibility için)
-  Sebum: 'head',
+  Sebum: 'systemic',
   'Göz Çevresi': 'head',
   'Göz Altı Morluğu': 'head',
   'Göz Kuruluğu': 'head',
@@ -103,7 +103,7 @@ const labelToBodyPartMap: Record<string, DigitalTwinTag['bodyPart'] | null> = {
   'Kol Ağrısı': 'arm',
   'Dirsek Ağrısı': 'arm',
   'Bilek Ağrısı': 'arm',
-  'Alerjik Reaksiyon': 'arm',
+  'Alerjik Reaksiyon': 'systemic',
   'Bacak Ağrısı': 'leg',
   'Diz Ağrısı': 'leg',
   'Ayak Bileği Ağrısı': 'leg',

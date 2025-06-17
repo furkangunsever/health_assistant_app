@@ -15,10 +15,13 @@ import {COLORS, FONT_SIZE, SPACING, hp, wp} from '../../utils/theme';
 import {RootState} from '../../redux/store';
 import CustomButton from '../../components/CustomButton';
 import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {MainStackParamList} from '../../routes/NavigationTypes';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {TabNavigatorParamList} from '../../routes/NavigationTypes';
 
-type HomeScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Home'>;
+type HomeScreenNavigationProp = BottomTabNavigationProp<
+  TabNavigatorParamList,
+  'HomeTab'
+>;
 const {width, height} = Dimensions.get('window');
 
 const HomeScreen = () => {
@@ -160,7 +163,9 @@ const HomeScreen = () => {
               </ImageBackground>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickAccessItem}>
+            <TouchableOpacity
+              style={styles.quickAccessItem}
+              onPress={() => navigation.navigate('CalendarTab')}>
               <View style={[styles.iconCircle, {backgroundColor: '#2ecc71'}]}>
                 <Image
                   source={require('../../assets/calendar.png')}
@@ -170,7 +175,9 @@ const HomeScreen = () => {
               <Text style={styles.menuText}>Randevular</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickAccessItem}>
+            <TouchableOpacity
+              style={styles.quickAccessItem}
+              onPress={() => navigation.navigate('NavigationTab')}>
               <View style={[styles.iconCircle, {backgroundColor: '#9b59b6'}]}>
                 <Image
                   source={require('../../assets/hospital.png')}
@@ -219,7 +226,8 @@ const HomeScreen = () => {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Yaklaşan Randevularım</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('CalendarTab')}>
               <Text style={styles.viewAllText}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
@@ -235,6 +243,7 @@ const HomeScreen = () => {
             <CustomButton
               title="Randevu Ekle"
               containerStyle={styles.appointmentButton}
+              onPress={() => navigation.navigate('CalendarTab')}
             />
           </View>
         </View>

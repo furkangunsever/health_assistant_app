@@ -12,7 +12,7 @@ const Stack = createStackNavigator<MainStackParamList>();
 const MainStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="UserProfile"
       screenOptions={{
         headerShown: false,
       }}>

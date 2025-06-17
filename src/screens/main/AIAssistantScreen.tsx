@@ -71,7 +71,7 @@ const AIAssistantScreen = () => {
 
     try {
       // Kullanıcı ID'sini auth state'den al
-      const userId = 'anonymous_user11';
+      const userId = ' anonymous_user2';
       const response = await sendMessageToAI(userId, message);
 
       const aiResponse: Message = {
